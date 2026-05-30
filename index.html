@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIVELY BOT - Ultimate Universal Webhook & AI Command Hub</title>
+    <style>
+        :root {
+            --bg-main: #313338;
+            --bg-sidebar: #2b2d31;
+            --bg-card: #1e1f22;
+            --bg-input: #383a40;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --blurple: #5865f2;
+            --blurple-hover: #4752c4;
+            --green: #23a55a;
+            --red: #da373c;
+            --ai-glow: #20b2aa;
+            --discord-blue: #5865F2;
+            --discord-blue-hover: #454fbf;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-normal);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* SIDEBAR PANEL */
+        .sidebar {
+            width: 290px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #1f2023;
+            position: relative;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            background-color: var(--bg-card);
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            color: #fff;
+            border-bottom: 1px solid #232428;
+            letter-spacing: 1px;
+        }
+
+        .bot-profile-list {
+            padding: 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 140px;
+        }
+
+        .profile-card {
+            background-color: var(--bg-card);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .profile-card:hover { background-color: #35373c; }
+        .profile-card.active { border-color: var(--discord-blue); background-color: #35373c; }
+
+        .profile-pfp, .fallback-letter-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .fallback-letter-avatar {
+            background-color: var(--blurple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .profile-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-card);
+            padding: 12px;
+            box-sizing: border-box;
+            border-top: 1px solid #232428;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* MAIN APP REGION */
+        .main-layout {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .top-navbar {
+            height: 60px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #1f2023;
+        }
+
+        .top-title {
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .top-title img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .top-title span span {
+            color: var(--discord-blue);
+        }
+
+        .workspace {
+            flex-grow: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-pane {
+            flex: 1.2;
+            padding: 20px;
+            overflow-y: auto;
+            box-sizing: border-box;
+            border-right: 1px solid #232428;
+        }
+
+        .preview-pane {
+            flex: 1;
+            padding: 20px;
+            background-color: #313338;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        /* STEP CARDS */
+        .step-container {
+            background-color: var(--bg-sidebar);
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .step-container.highlight-required {
+            border: 2px dashed var(--discord-blue);
+            background-color: rgba(88, 101, 242, 0.05);
+        }
+
+        .step-heading {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-number {
+            background-color: var(--discord-blue);
+            color: #fff;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .form-group { margin-bottom: 14px; position: relative; }
+        .form-row { display: flex; gap: 15px; align-items: center; }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: bold;
+            color: #b5bac1;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .char-counter {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .char-counter.limit-danger {
+            color: var(--red);
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="url"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-card);
+            border: 1px solid #1e1f22;
+            color: var(--text-normal);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--discord-blue); }
+        textarea { resize: vertical; height: 90px; }
+
+        /* QUICK FORMAT BAR */
+        .format-bar {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 6px 6px 0 0;
+            border-bottom: 1px solid var(--bg-input);
+        }
+        .format-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-normal);
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .format-btn:hover {
+            background: var(--bg-input);
+            color: #fff;
+        }
+        .textarea-with-bar {
+            border-radius: 0 0 6px 6px !important;
+        }
+
+        .avatar-upload-zone, .media-upload-zone {
+            border: 2px dashed var(--discord-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-card);
+            transition: all 0.2s;
+        }
+
+        .avatar-upload-zone {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .media-upload-zone {
+            width: 100%;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .media-upload-zone p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* AI BOX GLOW */
+        .ai-badge { background-color: var(--ai-glow); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .ai-box { border: 1px solid var(--ai-glow); background-color: rgba(32, 178, 170, 0.02); }
+
+        /* BUTTONS */
+        .btn {
+            background-color: var(--blurple);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:hover { background-color: var(--blurple-hover); }
+        .btn-lively { background-color: var(--discord-blue); }
+        .btn-lively:hover { background-color: var(--discord-blue-hover); }
+        .btn-green { background-color: var(--green); }
+        .btn-green:hover { background-color: #1a7f43; }
+        .btn-red { background-color: var(--red); }
+        .btn-red:hover { background-color: #a92b2f; }
+        .btn-ai { background-color: var(--ai-glow); color: #1e1f22; font-weight: bold; }
+        .btn-ai:hover { background-color: #17938d; }
+        .btn-secondary { background-color: #4e5058; font-size: 11px; padding: 6px 12px; }
+        .btn-secondary:hover { background-color: #6d6f78; }
+
+        /* DISCORD VIEW REPLICA */
+        .discord-chat-view { background-color: var(--bg-main); border-radius: 8px; padding: 16px; display: flex; gap: 16px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .chat-message-content { flex-grow: 1; }
+        .chat-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .chat-user { color: #fff; font-weight: 500; font-size: 15px; }
+        .chat-tag { background-color: var(--blurple); color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; font-weight: bold; }
+        .chat-timestamp { font-size: 12px; color: var(--text-muted); }
+        .chat-text { font-size: 15px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+
+        /* MEDIA DISPLAY IN PREVIEW */
+        .preview-media-attachment { margin-top: 10px; max-width: 100%; max-height: 300px; border-radius: 4px; display: none; }
+
+        /* EMBEDS REPLICA */
+        .mock-embed { margin-top: 8px; background-color: var(--bg-sidebar); border-left: 4px solid var(--blurple); border-radius: 4px; padding: 12px 16px; max-width: 520px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; }
+        .embed-title { color: #fff; font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+        .embed-desc { font-size: 14px; color: #dbdee1; white-space: pre-wrap; }
+
+        /* MODALS */
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000; padding:20px; box-sizing:border-box; }
+        .modal-card { background-color: var(--bg-sidebar); border-radius: 10px; max-width: 500px; width:100%; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #383a40; }
+        .modal-header { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .modal-body { font-size: 14px; line-height: 1.5; color: var(--text-normal); max-height: 300px; overflow-y: auto; margin-bottom: 20px; }
+
+        .svg-icon { width: 18px; height: 18px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="sidebar">
+        <div class="sidebar-header" data-i18n="savedProfiles">LIVELY CONFIG FILES</div>
+        <div class="bot-profile-list" id="profileContainer"></div>
+        
+        <div class="sidebar-footer">
+            <button class="btn btn-lively" style="width: 100%;" onclick="createNewProfile()" data-i18n="addNewBot">+ Spawn New Bot Profile</button>
+            <div style="display: flex; gap: 4px; width: 100%;">
+                <button class="btn btn-secondary" style="flex:1; font-size:10px;" onclick="exportProfilesConfiguration()">Export JSON</button>
+                <button class="btn btn-secondary" style="flex:1; font-size:10px;" onclick="document.getElementById('importFile').click()">Import JSON</button>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importProfilesConfiguration(this)">
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="toggleModal('creditsModal')" data-i18n="creditsBtn">Credits</button>
+                <button class="btn btn-secondary" style="flex:1;" onclick="toggleModal('tosModal')" data-i18n="tosBtn">Terms</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="top-navbar">
+            <div class="top-title">   
+                <span>LIVELY <span>BOT</span> Suite</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="margin:0; text-transform:none;" data-i18n="selectLanguage">Language:</label>
+                <select id="langMenu" style="width:auto; padding:6px 12px; font-size:12px;" onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="editor-pane">
+                
+                <div id="webhookStepCard" class="step-container highlight-required">
+                    <div class="step-heading"><div class="step-number">1</div><span>Link Connection Field (Paste First)</span></div>
+                    <div class="form-group">
+                        <label style="color: #fff;">Discord Webhook Target URL</label>
+                        <input type="url" id="webhookUrl" placeholder="https://discord.com/api/webhooks/..." oninput="handleWebhookUrlInput()">
+                        <span id="syncIndicator" style="font-size: 11px; margin-top: 5px; display: block; color: var(--text-muted);">Paste a clean webhook target endpoint above to instantly auto-fetch identity details.</span>
+                    </div>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-number">2</div><span data-i18n="step1Title">Identity Configuration</span></div>
+                    <div class="form-row">
+                        <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarFileSelect(this)">
+                        <div id="avatarZone" class="avatar-upload-zone" onclick="document.getElementById('avatarFileInput').click()">
+                            <span style="font-size:9px; font-weight:bold; color:var(--text-muted); text-align:center; padding:4px;">Upload PFP</span>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin: 0;">
+                            <label data-i18n="botNameLabel">Bot Profile Display Identity</label>
+                            <input type="text" id="username" placeholder="Awaiting synchronization or user manual input..." oninput="updateActiveProfileData()">
+                        </div>
+                    </div>
+                    <button class="btn btn-red" style="padding: 4px 8px; font-size: 11px; margin-top: 15px;" onclick="deleteCurrentProfile()" data-i18n="deleteProfile">Delete Bot Profile</button>
+                </div>
+
+                <div class="step-container ai-box">
+                    <div class="step-heading"><span class="ai-badge">Universal AI Engine</span><span data-i18n="aiStepTitle">AI Generation Hub</span></div>
+                    <div class="form-group">
+                        <label>AI Network Provider API Brand</label>
+                        <select id="aiProvider" onchange="adjustAiProviderDefaults()">
+                            <option value="openai">ChatGPT (OpenAI Core Stack)</option>
+                            <option value="anthropic">Claude (Anthropic Model Suite)</option>
+                            <option value="google">Gemini (Google Developer Cluster)</option>
+                            <option value="groq">Groq (Ultra-Fast LPU Engine)</option>
+                            <option value="xai">Grok (xAI Matrix Framework)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Provider API Key</label>
+                        <input type="password" id="aiApiKey" placeholder="Paste your paid API provider key here...">
+                    </div>
+                    <div class="form-row form-group">
+                        <div style="flex:1;">
+                            <label>Target Engine Model Name</label>
+                            <input type="text" id="aiModelName" value="gpt-4o">
+                        </div>
+                        <div style="flex:1;" id="endpointContainer">
+                            <label>Proxy Target Gateway Endpoint URL</label>
+                            <input type="text" id="aiBaseUrl" value="https://api.openai.com/v1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="aiPromptLabel">Interactive Command Instructions Prompt</label>
+                        <textarea id="aiPrompt" placeholder="Write something epic, professional, or funny for the discord chat..."></textarea>
+                    </div>
+                    <button class="btn btn-ai" id="aiGenerateBtn" onclick="executeUniversalAiPipeline()">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 21c0 .55-.45 1-1 1s-1-.45-1-1v-4H3c-.55 0-1-.45-1-1s.45-1 1-1h4V9c0-.55.45-1 1-1s1 .45 1 1v4h4c.55 0 1 .45 1 1s-.45 1-1 1H9v4zm12-12c0 .55-.45 1-1 1h-4v4c0 .55-.45 1-1 1s-1-.45-1-1v-4h-4c-.55 0-1-.45-1-1s.45-1 1-1h4V3c0-.55.45-1 1-1s1 .45 1 1v4h4c.55 0 1 .45 1 1z"/></svg>
+                        <span id="aiBtnText" data-i18n="aiBtnText">Generate & Auto-Paste Text</span>
+                    </button>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-number">3</div><span data-i18n="step2Title">Main Message Payload Context</span></div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 8px; border-radius: 6px; margin-bottom: 12px;">
+                        <label style="margin: 0;" data-i18n="fontStyleLabel">Text Style Font Engine:</label>
+                        <select id="fontEngineSelect" style="width: auto; padding: 4px;" onchange="renderLivePreview()">
+                            <option value="normal">Default Standard Regular</option>
+                            <option value="gothic">𝔊𝔬𝔱𝔥𝔦𝔠 / Fraktur Layout</option>
+                            <option value="script">𝓢𝓬𝓻𝓲𝓹𝓽 / Cursive Hand</option>
+                            <option value="mono">𝙼𝚘𝚗𝚘𝚜𝚙𝚊𝚌𝚎 Tech Block</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Message Content <span id="mainCharCounter" class="char-counter">0 / 2000</span></label>
+                        <div class="format-bar">
+                            <button class="format-btn" onclick="wrapTextFormatting('**')">B</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('*')">I</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('__')">U</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('~~')">S</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('`')">Code</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('||')">Spoiler</button>
+                        </div>
+                        <textarea id="content" class="textarea-with-bar" placeholder="Type text content here..." oninput="renderLivePreview()"></textarea>
+                    </div>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-number">4</div><span>Premium Native Media Upload Suite</span></div>
+                    <div class="form-group">
+                        <label>Upload Directly (Photos, Animations, GIFs, or Videos)</label>
+                        <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display: none;" onchange="handleLocalMediaUpload(this)">
+                        <div class="media-upload-zone" onclick="document.getElementById('mediaFileInput').click()">
+                            <p id="mediaUploadPrompt">Click here to browse local disk storage files (.png, .jpg, .gif, .mp4, .webm)</p>
+                        </div>
+                        <button class="btn btn-red" id="clearMediaBtn" style="margin-top: 10px; display: none; padding: 4px 8px; font-size: 11px;" onclick="clearUploadedMediaAttachment()">Remove Uploaded Asset File</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Alternative Asset Link Input URL</label>
+                        <input type="url" id="mediaUrl" placeholder="https://i.imgur.com/example.gif" oninput="renderLivePreview()">
+                    </div>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-number">5</div><span data-i18n="step3Title">Structured Embed Designer Card</span></div>
+                    <div class="form-group">
+                        <label>Embed Header Title</label>
+                        <input type="text" id="embTitle" placeholder="Bold Header Title String..." oninput="renderLivePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Embed Core Description Narrative <span id="embedCharCounter" class="char-counter">0 / 4000</span></label>
+                        <textarea id="embDesc" placeholder="Enter paragraph content entries..." oninput="renderLivePreview()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="embColorLabel">Highlight Strip Accent Color</label>
+                        <input type="color" id="embColor" value="#5865F2" style="height:40px; width:100%; border:1px solid #1e1f22; background:none; cursor:pointer; border-radius:6px;" oninput="renderLivePreview()">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="preview-pane">
+                <div style="font-size:12px; text-transform:uppercase; font-weight:bold; color:var(--text-muted); margin-bottom:12px;" data-i18n="livePreview">Live Feed Display Output Window Monitor</div>
+                
+                <div class="discord-chat-view">
+                    <img id="prevPfpImg" src="" style="display:none; width: 38px; height: 38px; border-radius: 50%;">
+                    <div id="prevPfpFallback" class="fallback-letter-avatar">B</div>
+
+                    <div class="chat-message-content">
+                        <div class="chat-header">
+                            <span id="prevUser" class="chat-user">Bot</span>
+                            <span class="chat-tag">Bot</span>
+                            <span class="chat-timestamp" data-i18n="timeBadge">Today at 4:20 PM</span>
+                        </div>
+                        <div id="prevContent" class="chat-text"></div>
+
+                        <img id="mediaPrevImg" class="preview-media-attachment" src="">
+                        <video id="mediaPrevVid" class="preview-media-attachment" controls autoplay muted loop></video>
+
+                        <div id="prevEmbed" class="mock-embed" style="display: none;">
+                            <div>
+                                <div id="prevEmbTitle" class="embed-title"></div>
+                                <div id="prevEmbDesc" class="embed-desc"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div style="margin-top: auto; padding-top: 20px;">
+                    <button class="btn btn-lively" style="width:100%; padding:15px; font-size:16px;" onclick="transmitWebhookPayloadToServer()">
+                        <span data-i18n="sendToDiscordBtn">Deploy Broadcast Node Message To Discord Server</span>
+                    </button>
+                    <div id="executionStatus" style="text-align:center; margin-top:10px; font-weight:bold; font-size:13px;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="creditsModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'creditsModal')">
+    <div class="modal-card">
+        <div class="modal-header">
+            <img src="data:image/png;base64,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" style="width:28px; height:28px;" alt="Logo">
+            <span>LIVELY BOT Suite Engine</span>
+        </div>
+        <div class="modal-body">
+            <p>This premium dashboard architecture is powered by a collaborative dual deployment configuration map:</p>
+            <div style="background:var(--bg-card); padding:12px; border-radius:6px; margin-bottom:10px;">
+                <strong style="color:#fff;">Core Code Base Engineering Systems Designer:</strong>
+                <p style="margin:5px 0 0 0; color:var(--discord-blue); font-weight:bold;">Gemini AI & User Assembly Collaboration Workspace</p>
+            </div>
+            <div style="background:var(--bg-card); padding:12px; border-radius:6px;">
+                <strong style="color:#fff;">Operational Sandbox Interface Server Host & Controller:</strong>
+                <p style="margin:5px 0 0 0; color:var(--green); font-weight:bold;">Verified Workspace Administrative Owner (You)</p>
+            </div>
+        </div>
+        <button class="btn btn-secondary" style="width:100%; padding:10px;" onclick="toggleModal('creditsModal')">Close Interface</button>
+    </div>
+</div>
+
+<div id="tosModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'tosModal')">
+    <div class="modal-card">
+        <div class="modal-header">
+            <svg class="svg-icon" style="color:var(--red)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Terms of Service Agreement Protocol</span>
+        </div>
+        <div class="modal-body">
+            <p>By executing network connections via this webhook panel dashboard toolset infrastructure, you unconditionally affirm compliance with the following security policy statements:</p>
+            <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px; margin:0;">
+                <li>You acknowledge that all automated text or media updates broadcast through this system framework must fully align with Discord's Terms of Service and Community Rules guidelines.</li>
+                <li>You pledge never to execute spam matrix floods, coordinate credential harvesting attempts, or distribute malicious payload scripts.</li>
+                <li>All data records, access configuration tokens, and encryption properties remain local within your client storage container block caches.</li>
+            </ol>
+        </div>
+        <button class="btn btn-green" style="width:100%; padding:10px;" onclick="toggleModal('tosModal')">Accept & Close</button>
+    </div>
+</div>
+
+<script>
+    const i18n = {
+        en: {
+            savedProfiles: "LIVELY CONFIG FILES", addNewBot: "+ Spawn New Bot Profile", creditsBtn: "Credits", tosBtn: "Terms",
+            selectLanguage: "Language:", step1Title: "Identity Setup", webhookUrlLabel: "Discord Webhook Target URL",
+            botNameLabel: "Bot Profile Display Identity", deleteProfile: "Delete Bot Profile",
+            aiStepTitle: "AI Generation Hub", aiPromptLabel: "Interactive Command Instructions Prompt",
+            aiBtnText: "Generate & Auto-Paste Text", step2Title: "Main Message Payload Context",
+            fontStyleLabel: "Text Style Font Engine:", step3Title: "Structured Embed Designer Card",
+            embColorLabel: "Highlight Strip Accent Color", livePreview: "Live Feed Display Output Window Monitor",
+            timeBadge: "Today at 4:20 PM", sendToDiscordBtn: "Deploy Broadcast Node Message To Discord Server"
+        },
+        es: {
+            savedProfiles: "Perfiles Guardados", addNewBot: "+ Añadir Nuevo Bot", creditsBtn: "Créditos", tosBtn: "Términos",
+            selectLanguage: "Idioma:", step1Title: "Configuración de Identidad", webhookUrlLabel: "URL de Webhook de Discord",
+            botNameLabel: "Nombre del Bot de Pantalla", deleteProfile: "Eliminar Perfil de Bot",
+            aiStepTitle: "Centro de Generación IA", aiPromptLabel: "Instrucciones de Comando Interactivo",
+            aiBtnText: "Generar y Pegar Texto", step2Title: "Contexto del Mensaje Principal",
+            fontStyleLabel: "Estilo de Fuente:", step3Title: "Tarjeta de Diseño de Embed Estructurada",
+            embColorLabel: "Color del Borde Lateral", livePreview: "Monitor de Ventana en Vivo de Discord",
+            timeBadge: "Hoy a las 4:20 PM", sendToDiscordBtn: "Desplegar Mensaje de Nodo a Discord"
+        },
+        fr: {
+            savedProfiles: "Profils Enregistrés", addNewBot: "+ Ajouter Nouveau Bot", creditsBtn: "Crédits", tosBtn: "Conditions",
+            selectLanguage: "Langue:", step1Title: "Configuration d'Identité", webhookUrlLabel: "URL du Webhook Discord",
+            botNameLabel: "Nom d'Affichage du Bot", deleteProfile: "Supprimer le Profil",
+            aiStepTitle: "Hub de Génération IA", aiPromptLabel: "Invite de Commandes Interactive",
+            aiBtnText: "Générer & Coller le Texte", step2Title: "Contenu Principal du Message",
+            fontStyleLabel: "Style de police de texte:", step3Title: "Concepteur de Cartes d'Intégration",
+            embColorLabel: "Couleur de la Bande Latérale", livePreview: "Aperçu de la Fenêtre de Sortie en Direct",
+            timeBadge: "Aujourd'hui à 4:20 PM", sendToDiscordBtn: "Transmettre le Message vers Discord"
+        },
+        de: {
+            savedProfiles: "Gespeicherte Bot-Profile", addNewBot: "+ Neuen Bot Hinzufügen", creditsBtn: "Credits", tosBtn: "Bedingungen",
+            selectLanguage: "Sprache:", step1Title: "Identität Konfigurieren", webhookUrlLabel: "Discord Webhook Ziel-URL",
+            botNameLabel: "Bot-Anzeigename Identität", deleteProfile: "Bot-Profil Löschen",
+            aiStepTitle: "KI-Generierungs-Hub", aiPromptLabel: "Interaktive Befehlsanweisungen",
+            aiBtnText: "Text Generieren & Einfügen", step2Title: "Hauptnachrichten-Inhalt",
+            fontStyleLabel: "Schriftart-Engine-Stil:", step3Title: "Strukturierte Embed-Designer-Karte",
+            embColorLabel: "Seitenleisten-Farbe", livePreview: "Live-Ausgabefenster-Monitor",
+            timeBadge: "Heute um 4:20 Uhr", sendToDiscordBtn: "Nachrichtenübertragung an Discord Starten"
+        },
+        ja: {
+            savedProfiles: "保存されたプロファイル", addNewBot: "+ 新しいボットを追加", creditsBtn: "クレジット", tosBtn: "利用規約",
+            selectLanguage: "言語選択:", step1Title: "アイデンティティ設定", webhookUrlLabel: "Discord ウェブフック URL",
+            botNameLabel: "ボットの表示名プロフィール", deleteProfile: "ボットのプロファイルを削除",
+            aiStepTitle: "AI 生成ハブコントロール", aiPromptLabel: "インタラクティブプロンプトコマンド指示",
+            aiBtnText: "テキストを自動生成して貼り付ける", step2Title: "メインメッセージペイロードコンテキスト",
+            fontStyleLabel: "テキストスタイルフォント:", step3Title: "構造化埋め込みデザイナーカード",
+            embColorLabel: "サイド強調アクセントカラー", livePreview: "リアルタイム出力ライブプレビュー監視窓",
+            timeBadge: "今日 4:20 PM", sendToDiscordBtn: "Discordサーバーにメッセージのデプロイを実行する"
+        }
+    };
+
+    const FONT_MAPS = {
+        gothic: { origin: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", vector: "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℛ𝔖𝔗𝔘𝔙𝔚𝔛𝔜𝔝𝔞𝔟𝔴𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷" },
+        script: { origin: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", vector: "𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦齿𝓨𝓩𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃" },
+        mono: { origin: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", vector: "𝙰𝙱𝙲𝖣𝙴𝖥𝖦𝖧𝖨𝖲𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚠𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜たん𝚡𝚢𝚣𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿" }
+    };
+
+    let appState = { profiles: [], activeProfileId: null, currentLang: 'en' };
+    let attachedMediaBlob = null;
+
+    window.onload = function() {
+        initApplicationCache();
+    };
+
+    function changeLanguage(lang) {
+        if(!i18n[lang]) return;
+        appState.currentLang = lang;
+        document.getElementById('langMenu').value = lang;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if(i18n[lang][key]) el.textContent = i18n[lang][key];
+        });
+        saveStateToStorage();
+    }
+
+    // AUTOMATED DISCORD WEBHOOK PROFILE PARSER SCRIPT ENGINE
+    async function handleWebhookUrlInput() {
+        const inputUrl = document.getElementById('webhookUrl').value.trim();
+        const indicator = document.getElementById('syncIndicator');
+        const cardElement = document.getElementById('webhookStepCard');
+
+        updateActiveProfileData();
+
+        if (inputUrl.startsWith("https://discord.com/api/webhooks/") || inputUrl.startsWith("https://discordapp.com/api/webhooks/")) {
+            try {
+                indicator.style.color = "var(--discord-blue)";
+                indicator.textContent = "Connecting to Discord node framework...";
+                
+                const response = await fetch(inputUrl);
+                if (!response.ok) throw new Error("Invalid response");
+                
+                const data = await response.json();
+                if (data.name) {
+                    document.getElementById('username').value = data.name;
+                    
+                    const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+                    if (active) {
+                        active.username = data.name;
+                        if (data.avatar) {
+                            // Fetch standard fallback icon avatar token path
+                            active.avatarBase64 = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`;
+                            document.getElementById('avatarZone').style.backgroundImage = `url(${active.avatarBase64})`;
+                        }
+                    }
+                    
+                    cardElement.classList.remove('highlight-required');
+                    cardElement.style.border = "1px solid var(--green)";
+                    indicator.style.color = "var(--green)";
+                    indicator.textContent = `Success! Synthesized profile identity: "${data.name}"`;
+                    
+                    saveStateToStorage();
+                    renderProfileSidebarList();
+                    renderLivePreview();
+                }
+            } catch (err) {
+                indicator.style.color = "var(--red)";
+                indicator.textContent = "Error pulling info from Discord. Check link structure.";
+            }
+        } else {
+            cardElement.classList.add('highlight-required');
+            indicator.style.color = "var(--text-muted)";
+            indicator.textContent = "Paste a clean webhook target endpoint above to instantly auto-fetch identity details.";
+        }
+    }
+
+    function adjustAiProviderDefaults() {
+        const provider = document.getElementById('aiProvider').value;
+        const modelInput = document.getElementById('aiModelName');
+        const endpointInput = document.getElementById('aiBaseUrl');
+        const container = document.getElementById('endpointContainer');
+
+        container.style.display = "block";
+        if(provider === 'openai') { modelInput.value = "gpt-4o"; endpointInput.value = "https://api.openai.com/v1"; }
+        else if(provider === 'anthropic') { modelInput.value = "claude-3-5-sonnet-20241022"; endpointInput.value = "https://api.anthropic.com/v1"; }
+        else if(provider === 'google') { modelInput.value = "gemini-1.5-flash"; container.style.display = "none"; }
+        else if(provider === 'groq') { modelInput.value = "llama3-8b-8192"; endpointInput.value = "https://api.groq.com/openai/v1"; }
+        else if(provider === 'xai') { modelInput.value = "grok-beta"; endpointInput.value = "https://api.x.ai/v1"; }
+    }
+
+    async function executeUniversalAiPipeline() {
+        const provider = document.getElementById('aiProvider').value;
+        const key = document.getElementById('aiApiKey').value.trim();
+        const model = document.getElementById('aiModelName').value.trim();
+        const baseUrl = document.getElementById('aiBaseUrl').value.trim();
+        const prompt = document.getElementById('aiPrompt').value.trim();
+        
+        const btnText = document.getElementById('aiBtnText');
+        const genBtn = document.getElementById('aiGenerateBtn');
+
+        if(!key || !prompt) { alert("Error: An API Key and a prompt are required."); return; }
+
+        genBtn.disabled = true;
+        btnText.textContent = "AI Processing Engine Active...";
+
+        let fetchUrl = "";
+        let fetchHeaders = { "Content-Type": "application/json" };
+        let fetchBody = {};
+
+        if(provider === 'openai' || provider === 'groq' || provider === 'xai') {
+            fetchUrl = `${baseUrl}/chat/completions`;
+            fetchHeaders["Authorization"] = `Bearer ${key}`;
+            fetchBody = { model: model, messages: [{ role: "user", content: prompt }] };
+        } else if(provider === 'anthropic') {
+            fetchUrl = `https://cors-anywhere.herokuapp.com/${baseUrl}/messages`; 
+            fetchHeaders["x-api-key"] = key;
+            fetchHeaders["anthropic-version"] = "2023-06-01";
+            fetchHeaders["anthropic-dangerous-direct-by-browser"] = "true";
+            fetchBody = { model: model, max_tokens: 1024, messages: [{ role: "user", content: prompt }] };
+        } else if(provider === 'google') {
+            fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+            fetchBody = { contents: [{ parts: [{ text: prompt }] }] };
+        }
+
+        try {
+            const response = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: JSON.stringify(fetchBody) });
+            if(!response.ok) throw new Error(`Gateway Error: Status Code ${response.status}`);
+            const data = await response.json();
+            
+            let outputText = "";
+            if(provider === 'openai' || provider === 'groq' || provider === 'xai') outputText = data.choices[0].message.content;
+            else if(provider === 'anthropic') outputText = data.content[0].text;
+            else if(provider === 'google') outputText = data.candidates[0].content.parts[0].text;
+
+            document.getElementById('content').value = outputText;
+            renderLivePreview();
+        } catch (error) {
+            console.error(error);
+            alert(`Execution Rejection Fault: ${error.message}`);
+        } finally {
+            genBtn.disabled = false;
+            btnText.textContent = i18n[appState.currentLang].aiBtnText;
+        }
+    }
+
+    function transformText(text, type) {
+        if (!FONT_MAPS[type] || !text) return text;
+        let result = ""; const mapping = FONT_MAPS[type];
+        const vectorArray = Array.from(mapping.vector);
+        for (let char of text) {
+            let index = mapping.origin.indexOf(char);
+            result += index !== -1 ? vectorArray[index] : char;
+        }
+        return result;
+    }
+
+    function wrapTextFormatting(symbol) {
+        const txtArea = document.getElementById('content');
+        const start = txtArea.selectionStart;
+        const end = txtArea.selectionEnd;
+        const text = txtArea.value;
+        
+        const selectedText = text.substring(start, end);
+        const replacement = symbol + selectedText + symbol;
+        
+        txtArea.value = text.substring(0, start) + replacement + text.substring(end);
+        txtArea.focus();
+        txtArea.selectionStart = start + symbol.length;
+        txtArea.selectionEnd = start + symbol.length + selectedText.length;
+        renderLivePreview();
+    }
+
+    function handleAvatarFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+                if (active) {
+                    active.avatarBase64 = e.target.result;
+                    saveStateToStorage();
+                    document.getElementById('avatarZone').style.backgroundImage = `url(${e.target.result})`;
+                    renderProfileSidebarList();
+                    renderLivePreview();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // PREMIUM DRAG & DROP MULTIMEDIA LOCAL BINARY HANDLERS
+    function handleLocalMediaUpload(input) {
+        const file = input.files[0];
+        if (file) {
+            attachedMediaBlob = file;
+            document.getElementById('mediaUploadPrompt').textContent = `Loaded File: ${file.name} (${Math.round(file.size/1024)} KB)`;
+            document.getElementById('clearMediaBtn').style.display = "inline-flex";
+            renderLivePreview();
+        }
+    }
+
+    function clearUploadedMediaAttachment() {
+        attachedMediaBlob = null;
+        document.getElementById('mediaFileInput').value = "";
+        document.getElementById('mediaUploadPrompt').textContent = "Click here to browse local disk storage files (.png, .jpg, .gif, .mp4, .webm)";
+        document.getElementById('clearMediaBtn').style.display = "none";
+        renderLivePreview();
+    }
+
+    function exportProfilesConfiguration() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "lively_bot_backup.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importProfilesConfiguration(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if(parsed.profiles && parsed.activeProfileId) {
+                    appState = parsed;
+                    saveStateToStorage();
+                    renderProfileSidebarList();
+                    loadProfileIntoEditor(appState.activeProfileId);
+                    alert("Profiles imported successfully!");
+                } else {
+                    alert("Invalid JSON profile architecture schema.");
+                }
+            } catch(err) {
+                alert("Failed to parse file.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function toggleModal(id) {
+        const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+    }
+    function closeModalOnOuterClick(e, id) { if(e.target.id === id) toggleModal(id); }
+
+    function initApplicationCache() {
+        const cache = localStorage.getItem('lively_bot_v6');
+        if (cache) { try { appState = JSON.parse(cache); } catch(e) { console.error(e); } }
+        if (!appState.profiles || appState.profiles.length === 0) {
+            appState.profiles = [{ id: 'p_' + Date.now(), webhook: '', username: 'Lively Spark Bot', avatarBase64: '' }];
+            appState.activeProfileId = appState.profiles[0].id;
+            saveStateToStorage();
+        }
+        renderProfileSidebarList();
+        loadProfileIntoEditor(appState.activeProfileId);
+        changeLanguage(appState.currentLang || 'en');
+    }
+
+    function saveStateToStorage() { localStorage.setItem('lively_bot_v6', JSON.stringify(appState)); }
+
+    function renderProfileSidebarList() {
+        const container = document.getElementById('profileContainer'); container.innerHTML = '';
+        appState.profiles.forEach(p => {
+            const card = document.createElement('div');
+            card.className = `profile-card ${p.id === appState.activeProfileId ? 'active' : ''}`;
+            card.onclick = () => loadProfileIntoEditor(p.id);
+            
+            let avatarHtml = `<div class="fallback-letter-avatar">B</div>`;
+            if(p.avatarBase64) avatarHtml = `<img class="profile-pfp" src="${p.avatarBase64}">`;
+
+            card.innerHTML = `${avatarHtml}<div class="profile-title">${p.username || 'Unnamed Unit'}</div>`;
+            container.appendChild(card);
+        });
+    }
+
+    function createNewProfile() {
+        const id = 'p_' + Date.now();
+        appState.profiles.push({ id: id, webhook: '', username: 'Lively Agent Node', avatarBase64: '' });
+        appState.activeProfileId = id;
+        saveStateToStorage();
+        renderProfileSidebarList();
+        loadProfileIntoEditor(id);
+    }
+
+    function deleteCurrentProfile() {
+        if (appState.profiles.length <= 1) return;
+        if (confirm("Purge selected configuration settings out of memory?")) {
+            appState.profiles = appState.profiles.filter(p => p.id !== appState.activeProfileId);
+            appState.activeProfileId = appState.profiles[0].id;
+            saveStateToStorage();
+            renderProfileSidebarList();
+            loadProfileIntoEditor(appState.activeProfileId);
+        }
+    }
+
+    function updateActiveProfileData() {
+        const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+        if (active) {
+            active.webhook = document.getElementById('webhookUrl').value.trim();
+            active.username = document.getElementById('username').value.trim();
+            saveStateToStorage();
+            renderProfileSidebarList();
+            renderLivePreview();
+        }
+    }
+
+    function loadProfileIntoEditor(id) {
+        appState.activeProfileId = id;
+        const target = appState.profiles.find(p => p.id === id);
+        if (target) {
+            document.getElementById('webhookUrl').value = target.webhook || '';
+            document.getElementById('username').value = target.username || '';
+            const zone = document.getElementById('avatarZone');
+            if (target.avatarBase64) zone.style.backgroundImage = `url(${target.avatarBase64})`;
+            else zone.style.backgroundImage = 'none';
+            
+            const cardElement = document.getElementById('webhookStepCard');
+            if (target.webhook) {
+                cardElement.classList.remove('highlight-required');
+                cardElement.style.border = "1px solid var(--green)";
+            } else {
+                cardElement.classList.add('highlight-required');
+                cardElement.style.border = "2px dashed var(--discord-blue)";
+            }
+            renderLivePreview();
+        }
+    }
+
+    function renderLivePreview() {
+        const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+        const username = document.getElementById('username').value.trim() || "Lively Bot";
+        
+        document.getElementById('prevUser').textContent = username;
+
+        const imgEl = document.getElementById('prevPfpImg');
+        const fallbackEl = document.getElementById('prevPfpFallback');
+        if(active && active.avatarBase64) {
+            imgEl.src = active.avatarBase64; imgEl.style.display = "block"; fallbackEl.style.display = "none";
+        } else {
+            fallbackEl.textContent = username.charAt(0).toUpperCase() || "B";
+            imgEl.style.display = "none"; fallbackEl.style.display = "flex";
+        }
+
+        const fontMode = document.getElementById('fontEngineSelect').value;
+        const rawContent = document.getElementById('content').value;
+        
+        const mainCountEl = document.getElementById('mainCharCounter');
+        mainCountEl.textContent = `${rawContent.length} / 2000`;
+        if(rawContent.length > 2000) mainCountEl.classList.add('limit-danger');
+        else mainCountEl.classList.remove('limit-danger');
+
+        const processedContent = transformText(rawContent, fontMode);
+        document.getElementById('prevContent').textContent = processedContent;
+
+        const imgPrev = document.getElementById('mediaPrevImg');
+        const vidPrev = document.getElementById('mediaPrevVid');
+        imgPrev.style.display = "none"; vidPrev.style.display = "none";
+
+        // Handle native browser memory link binding for previews
+        if (attachedMediaBlob) {
+            const objectUrl = URL.createObjectURL(attachedMediaBlob);
+            if (attachedMediaBlob.type.startsWith('video/')) {
+                vidPrev.src = objectUrl; vidPrev.style.display = "block";
+            } else {
+                imgPrev.src = objectUrl; imgPrev.style.display = "block";
+            }
+        } else {
+            const mediaUrl = document.getElementById('mediaUrl').value.trim();
+            if(mediaUrl) {
+                if(mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i)) { vidPrev.src = mediaUrl; vidPrev.style.display = "block"; } 
+                else { imgPrev.src = mediaUrl; imgPrev.style.display = "block"; }
+            }
+        }
+
+        const title = document.getElementById('embTitle').value.trim();
+        const desc = document.getElementById('embDesc').value.trim();
+        
+        const embedCountEl = document.getElementById('embedCharCounter');
+        embedCountEl.textContent = `${desc.length} / 4000`;
+        if(desc.length > 4000) embedCountEl.classList.add('limit-danger');
+        else embedCountEl.classList.remove('limit-danger');
+
+        const color = document.getElementById('embColor').value;
+        const embedWrapper = document.getElementById('prevEmbed');
+
+        if(title || desc) {
+            embedWrapper.style.display = "grid"; embedWrapper.style.borderLeftColor = color;
+            document.getElementById('prevEmbTitle').textContent = title;
+            document.getElementById('prevEmbDesc').textContent = desc;
+        } else { embedWrapper.style.display = "none"; }
+    }
+
+    // MULTI-PART FORMDATA NETWORK TRANSPORTER PIPELINE
+    async function transmitWebhookPayloadToServer() {
+        const webhookUrl = document.getElementById('webhookUrl').value.trim();
+        const statusEl = document.getElementById('executionStatus');
+        const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+
+        if (!webhookUrl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Error: Link field is empty.'; return; }
+
+        const fontMode = document.getElementById('fontEngineSelect').value;
+        let mainContent = transformText(document.getElementById('content').value, fontMode);
+        const mediaUrl = document.getElementById('mediaUrl').value.trim();
+
+        if (mainContent.length > 2000) { alert("Message content exceeds Discord's 2000 character limit."); return; }
+        if (mediaUrl) { mainContent += "\n" + mediaUrl; }
+
+        const payload = { username: document.getElementById('username').value.trim() || undefined };
+        if (mainContent) payload.content = mainContent;
+        if (active && active.avatarBase64 && active.avatarBase64.startsWith('http')) { payload.avatar_url = active.avatarBase64; }
+
+        const title = document.getElementById('embTitle').value.trim();
+        const desc = document.getElementById('embDesc').value.trim();
+        const colorHex = document.getElementById('embColor').value;
+
+        if (title || desc) {
+            const embed = { color: parseInt(colorHex.replace('#', ''), 16) };
+            if (title) embed.title = title; if (desc) embed.description = desc;
+            if(mediaUrl && !mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i)) { embed.image = { url: mediaUrl }; }
+            payload.embeds = [embed];
+        }
+
+        // Build Multi-Part FormData payload configuration arrays natively
+        const sendForm = new FormData();
+        sendForm.append('payload_json', JSON.stringify(payload));
+        
+        if (attachedMediaBlob) {
+            sendForm.append('files[0]', attachedMediaBlob, attachedMediaBlob.name);
+        }
+
+        try {
+            statusEl.style.color = 'var(--discord-blue)'; statusEl.textContent = 'Deploying node...';
+            const response = await fetch(webhookUrl, { method: 'POST', body: sendForm });
+            if (response.ok) { statusEl.style.color = 'var(--green)'; statusEl.textContent = 'Transmission Successful!'; } 
+            else { statusEl.style.color = 'var(--red)'; statusEl.textContent = `API Response Rejection Fault: ${response.status}`; }
+        } catch (error) {
+            statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Network Transport Failure.';
+        }
+    }
+</script>
+
+</body>
+</html>
