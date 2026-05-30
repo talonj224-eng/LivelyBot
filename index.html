@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIVELY BOT - Ultimate Universal Webhook & AI Command Hub</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235865F2'/><text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='900' font-size='22' fill='white'>L</text></svg>">
+
+    <style>
+        :root {
+            --bg-main: #313338;
+            --bg-sidebar: #2b2d31;
+            --bg-card: #1e1f22;
+            --bg-input: #383a40;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --blurple: #5865f2;
+            --blurple-hover: #4752c4;
+            --green: #23a55a;
+            --red: #da373c;
+            --ai-glow: #20b2aa;
+            --yt-red: #ff0000;
+            --poll-purple: #9b59b6;
+            --time-amber: #f1c40f;
+            --discord-blue: #5865F2;
+            --discord-blue-hover: #454fbf;
+            --reaction-bg: #2b2d31;
+            --reaction-active-bg: rgba(88, 101, 242, 0.15);
+            --reaction-active-border: #5865f2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-normal);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* SIDEBAR PANEL */
+        .sidebar {
+            width: 300px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #1f2023;
+            position: relative;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            background-color: var(--bg-card);
+            font-weight: bold;
+            font-size: 13px;
+            text-align: center;
+            color: #fff;
+            border-bottom: 1px solid #232428;
+            letter-spacing: 1px;
+        }
+
+        .bot-profile-list {
+            padding: 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 190px;
+        }
+
+        .profile-card {
+            background-color: var(--bg-card);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .profile-card:hover { background-color: #35373c; }
+        .profile-card.active { border-color: var(--discord-blue); background-color: #35373c; }
+
+        .profile-pfp, .fallback-letter-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .fallback-letter-avatar {
+            background-color: var(--blurple);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .profile-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-card);
+            padding: 12px;
+            box-sizing: border-box;
+            border-top: 1px solid #232428;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* MAIN APP REGION */
+        .main-layout {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .top-navbar {
+            height: 60px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #1f2023;
+        }
+
+        .top-title {
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .top-title span span {
+            color: var(--discord-blue);
+        }
+
+        .workspace {
+            flex-grow: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-pane {
+            flex: 1.2;
+            padding: 20px;
+            overflow-y: auto;
+            box-sizing: border-box;
+            border-right: 1px solid #232428;
+        }
+
+        .preview-pane {
+            flex: 1;
+            padding: 20px;
+            background-color: #313338;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        /* STEP CARDS */
+        .step-container {
+            background-color: var(--bg-sidebar);
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .step-container.highlight-required {
+            border: 2px dashed var(--discord-blue);
+            background-color: rgba(88, 101, 242, 0.05);
+        }
+
+        .step-heading {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-number {
+            background-color: var(--discord-blue);
+            color: #fff;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .form-group { margin-bottom: 14px; position: relative; }
+        .form-row { display: flex; gap: 15px; align-items: center; }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: bold;
+            color: #b5bac1;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .char-counter {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], input[type="url"], input[type="password"], input[type="datetime-local"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-card);
+            border: 1px solid #1e1f22;
+            color: var(--text-normal);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--discord-blue); }
+        textarea { resize: vertical; height: 90px; }
+
+        .input-secret-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-secret-wrapper input {
+            padding-right: 45px;
+        }
+        .secret-toggle-btn {
+            position: absolute;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .secret-toggle-btn:hover { color: #fff; }
+
+        /* QUICK FORMAT & EXPRESS PAD BAR */
+        .format-bar {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 6px 6px 0 0;
+            border-bottom: 1px solid var(--bg-input);
+            flex-wrap: wrap;
+        }
+        .format-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-normal);
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .format-btn:hover {
+            background: var(--bg-input);
+            color: #fff;
+        }
+        .textarea-with-bar {
+            border-radius: 0 0 6px 6px !important;
+        }
+
+        /* EXPRESS QUICK-PAD ELEMENT GRID */
+        .express-quick-pad {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            background: rgba(0,0,0,0.15);
+            padding: 8px;
+            border-radius: 6px;
+            flex-wrap: wrap;
+        }
+        .express-item {
+            background: var(--bg-input);
+            border: none;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.1s;
+        }
+        .express-item:hover { background: var(--blurple); }
+
+        .avatar-upload-zone, .media-upload-zone {
+            border: 2px dashed var(--discord-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-card);
+            transition: all 0.2s;
+        }
+
+        .avatar-upload-zone {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .media-upload-zone {
+            width: 100%;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .media-upload-zone p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* DYNAMIC BUILDERS */
+        .embed-fields-builder, .poll-choices-builder, .reactions-builder {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .embed-field-row, .poll-choice-row, .reaction-row {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-card);
+            padding: 8px;
+            border-radius: 6px;
+            align-items: center;
+        }
+
+        /* BADGES */
+        .badge-style { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .ai-badge { background-color: var(--ai-glow); color: #fff; }
+        .ai-box { border: 1px solid var(--ai-glow); background-color: rgba(32, 178, 170, 0.01); }
+        .poll-badge { background-color: var(--poll-purple); color: #fff; }
+        .poll-box { border: 1px solid var(--poll-purple); background-color: rgba(155, 89, 182, 0.01); }
+        .yt-badge { background-color: var(--yt-red); color: #fff; }
+        .yt-box { border: 1px solid var(--yt-red); background-color: rgba(255, 0, 0, 0.01); }
+        .time-badge { background-color: var(--time-amber); color: #1e1f22; }
+        .time-box { border: 1px solid var(--time-amber); background-color: rgba(241, 196, 15, 0.01); }
+
+        /* BUTTONS */
+        .btn {
+            background-color: var(--blurple);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:hover { background-color: var(--blurple-hover); }
+        .btn-lively { background-color: var(--discord-blue); }
+        .btn-lively:hover { background-color: var(--discord-blue-hover); }
+        .btn-green { background-color: var(--green); }
+        .btn-green:hover { background-color: #1a7f43; }
+        .btn-red { background-color: var(--red); }
+        .btn-red:hover { background-color: #a92b2f; }
+        .btn-secondary { background-color: #4e5058; font-size: 11px; padding: 6px 12px; }
+        .btn-secondary:hover { background-color: #6d6f78; }
+
+        /* DISCORD CHAT VIEW PREVIEW */
+        .discord-chat-view { background-color: var(--bg-main); border-radius: 8px; padding: 16px; display: flex; gap: 16px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .chat-message-content { flex-grow: 1; min-width: 0; }
+        .chat-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .chat-user { color: #fff; font-weight: 500; font-size: 15px; }
+        .chat-tag { background-color: var(--blurple); color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; font-weight: bold; }
+        .chat-timestamp { font-size: 12px; color: var(--text-muted); }
+        .chat-text { font-size: 15px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+
+        .preview-media-attachment { margin-top: 10px; max-width: 100%; max-height: 300px; border-radius: 4px; display: none; }
+
+        /* EMBEDS REPLICA */
+        .mock-embed { margin-top: 8px; background-color: var(--bg-sidebar); border-left: 4px solid var(--blurple); border-radius: 4px; padding: 12px 16px; max-width: 520px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+        .embed-author { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #fff; }
+        .embed-author-icon { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+        .embed-title { color: #00b0f4; font-weight: 600; font-size: 16px; cursor: pointer; text-decoration: none; }
+        .embed-title:hover { text-decoration: underline; }
+        .embed-desc { font-size: 14px; color: #dbdee1; white-space: pre-wrap; }
+        .embed-preview-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 4px; }
+        .embed-preview-field-item { background: rgba(0,0,0,0.1); padding: 6px; border-radius: 4px; }
+        .embed-field-title { font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 2px; }
+        .embed-field-value { font-size: 12px; color: #dbdee1; }
+        .embed-thumbnail-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; position: absolute; top: 16px; right: 16px; display: none; }
+        .embed-main-img { max-width: 100%; max-height: 250px; border-radius: 4px; margin-top: 6px; object-fit: cover; display: none; }
+        .embed-footer { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+        .embed-footer-icon { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+
+        /* MOCK POLL CARD PREVIEW */
+        .mock-poll-container { margin-top: 10px; background-color: var(--bg-sidebar); border-radius: 8px; padding: 16px; max-width: 480px; border: 1px solid rgba(255,255,255,0.05); display: none; }
+        .mock-poll-question { font-weight: 600; font-size: 16px; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .mock-poll-choice-item { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; cursor: pointer; transition: background 0.1s; }
+        .mock-poll-choice-item:hover { background: #2f3136; }
+        .mock-poll-choice-left { display: flex; align-items: center; gap: 10px; color: #dbdee1; }
+        .mock-poll-circle { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #b5bac1; display: inline-block; }
+
+        /* REALISTIC REACTION LIST STYLE */
+        .mock-reaction-list-wrap { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+        .mock-reaction-node { background: var(--reaction-bg); border: 1px solid transparent; padding: 4px 8px; border-radius: 4px; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; transition: background 0.1s, border 0.1s; color: var(--text-normal); }
+        .mock-reaction-node:hover { background: #35373c; border-color: #4f5157; }
+        .mock-reaction-node.active-react { background: var(--reaction-active-bg); border-color: var(--reaction-active-border); color: #fff; }
+        .mock-reaction-count { font-size: 11px; font-weight: 600; color: #b5bac1; }
+        .mock-reaction-node.active-react .mock-reaction-count { color: var(--blurple); }
+
+        .blueprints-section { background: var(--bg-card); padding: 8px; border-radius: 6px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000; padding:20px; box-sizing:border-box; }
+        .modal-card { background-color: var(--bg-sidebar); border-radius: 10px; max-width: 500px; width:100%; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #383a40; }
+        .svg-icon { width: 18px; height: 18px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="sidebar">
+        <div class="sidebar-header">LIVELY CONFIG FILES</div>
+        
+        <div style="padding: 12px 12px 0 12px;">
+            <div class="blueprints-section">
+                <span style="font-size: 10px; font-weight: bold; color: var(--text-muted);">WORKSPACE PRESETS & TEMPLATES</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px;">
+                    <button class="btn btn-secondary" style="padding: 4px; font-size: 10px;" onclick="injectSystemPreset('welcome')">Welcome Note</button>
+                    <button class="btn btn-secondary" style="padding: 4px; font-size: 10px;" onclick="injectSystemPreset('patch')">Patch Log</button>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <input type="text" id="blueprintName" placeholder="Template Name..." style="padding: 6px; font-size: 12px;">
+                    <button class="btn btn-green" style="padding: 6px 10px; font-size: 11px;" onclick="saveCurrentAsBlueprint()">Save</button>
+                </div>
+                <select id="blueprintSelect" style="padding: 6px; font-size: 11px;" onchange="loadSelectedBlueprint()">
+                    <option value="">-- Load Quick Blueprint --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bot-profile-list" id="profileContainer"></div>
+        
+        <div class="sidebar-footer">
+            <button class="btn btn-lively" style="width: 100%;" onclick="createNewProfile()">+ Spawn New Bot Profile</button>
+            <div style="display: flex; gap: 4px; width: 100%;">
+                <button class="btn btn-secondary" style="flex:1; font-size:10px;" onclick="exportProfilesConfiguration()">Export JSON</button>
+                <button class="btn btn-secondary" style="flex:1; font-size:10px;" onclick="document.getElementById('importFile').click()">Import JSON</button>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importProfilesConfiguration(this)">
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="toggleModal('creditsModal')">Credits</button>
+                <button class="btn btn-secondary" style="flex:1;" onclick="toggleModal('tosModal')">Terms</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="top-navbar">
+            <div class="top-title"><span>LIVELY <span>BOT</span> Suite</span></div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="margin:0; text-transform:none;">Language:</label>
+                <select id="langMenu" style="width:auto; padding:6px 12px; font-size:12px;" onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="editor-pane">
+                
+                <div id="webhookStepCard" class="step-container highlight-required">
+                    <div class="step-heading">
+                        <div class="step-title-left"><div class="step-number">1</div><span>Link Connection Field (Keep Secret)</span></div>
+                        <button class="btn btn-secondary" style="font-size:10px; padding:2px 8px;" onclick="triggerPingTest()">Test Ping Connection</button>
+                    </div>
+                    <div class="form-group">
+                        <label style="color: #fff;">Discord Webhook Target URL</label>
+                        <div class="input-secret-wrapper">
+                            <input type="password" id="webhookUrl" placeholder="https://discord.com/api/webhooks/..." oninput="handleWebhookUrlInput()">
+                            <button type="button" class="secret-toggle-btn" onclick="toggleWebhookFieldMask()">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:10px;">
+                        <label style="display:flex; justify-content:between;">
+                            <span>Forum Thread Snowflake ID / Branch ID Node</span>
+                            <span style="color:var(--ai-glow); font-size:9px;">Advanced Routing</span>
+                        </label>
+                        <input type="text" id="webhookThreadId" placeholder="Optional: Paste Thread ID to route payload into sub-threads/forums..." oninput="renderLivePreview()">
+                    </div>
+                    <span id="syncIndicator" style="font-size: 11px; margin-top: 5px; display: block; color: var(--text-muted);">Paste a clean webhook target endpoint above to instantly auto-fetch identity details.</span>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-title-left"><div class="step-number">2</div><span>Identity Configuration</span></div></div>
+                    <div class="form-row">
+                        <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarFileSelect(this)">
+                        <div id="avatarZone" class="avatar-upload-zone" onclick="document.getElementById('avatarFileInput').click()">
+                            <span style="font-size:9px; font-weight:bold; color:var(--text-muted); text-align:center; padding:4px;">Upload PFP</span>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin: 0;">
+                            <label>Bot Profile Display Identity</label>
+                            <input type="text" id="username" placeholder="Awaiting synchronization or user manual input..." oninput="updateActiveProfileData()">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label>Webhook Avatar Override Link (Public HTTPS URL)</label>
+                        <input type="url" id="avatarOverrideUrl" placeholder="https://i.imgur.com/your-avatar.png" oninput="updateActiveProfileData()">
+                        <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; display: block;">⚠️ Discord requires a real web image link to modify the profile picture over the API connection. Local file uploads above sync colors & app previews.</span>
+                    </div>
+                    <div style="font-size: 10px; color: var(--ai-glow); margin-top: 8px;">✨ "Impossible" Smart-Chroma Feature Enabled: Uploading a profile photo automatically syncs your layout accent color!</div>
+                    <button class="btn btn-red" style="padding: 4px 8px; font-size: 11px; margin-top: 15px;" onclick="deleteCurrentProfile()">Delete Bot Profile</button>
+                </div>
+
+                <div class="step-container time-box">
+                    <div class="step-heading">
+                        <div class="step-title-left"><span class="badge-style time-badge">Timestamp Forge</span><span>Dynamic Time Tag Engine</span></div>
+                    </div>
+                    <div class="form-row">
+                        <div style="flex:1;">
+                            <label>Select Date & Time</label>
+                            <input type="datetime-local" id="timestampPicker" onchange="buildUndocumentedTimestampString()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Display Format Mode</label>
+                            <select id="timestampFormat" onchange="buildUndocumentedTimestampString()">
+                                <option value="R">Relative Time (e.g., In 5 minutes)</option>
+                                <option value="t">Short Time (e.g., 4:20 PM)</option>
+                                <option value="T">Long Time (e.g., 4:20:30 PM)</option>
+                                <option value="d">Short Date (e.g., 05/30/2026)</option>
+                                <option value="F">Full Date/Time Long Form</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; margin-top:10px;">
+                        <input type="text" id="generatedTimestampResult" readonly style="font-family:monospace; padding:6px; font-size:12px; background:var(--bg-main);" placeholder="<t:1773950400:R>">
+                        <button class="btn btn-secondary" style="padding:0 12px; font-size:12px;" onclick="injectTimestampToPayloadTextarea()">Inject at Cursor</button>
+                    </div>
+                </div>
+
+                <div class="step-container poll-box">
+                    <div class="step-heading">
+                        <div class="step-title-left"><span class="badge-style poll-badge">Native API Polls</span><span>Interactive System Poll Matrix</span></div>
+                        <input type="checkbox" id="pollToggle" onchange="toggleNativePollSystem(this.checked)" style="width:auto; margin:0 5px 0 0; cursor:pointer;">
+                        <label for="pollToggle" style="margin:0; font-size:11px; cursor:pointer;">Enable Poll Field</label>
+                    </div>
+                    <div id="pollWizardFields" style="display:none;">
+                        <div class="form-group">
+                            <label>Core Poll Question / Prompt Title</label>
+                            <input type="text" id="pollQuestion" placeholder="What should we build next? 🤔" oninput="renderLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Poll Multi-Choice Options</span>
+                                <span style="font-size:10px; color:var(--text-muted);">Max 10 Choices</span>
+                            </label>
+                            <div class="poll-choices-builder" id="pollChoicesContainer"></div>
+                            <button class="btn btn-secondary" style="margin-top:8px; width:100%;" onclick="addCustomPollChoiceItem()">+ Append Poll Selection Choice Node</button>
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:center; gap:8px; background:var(--bg-card); padding:8px; border-radius:6px;">
+                            <input type="checkbox" id="pollMultiSelect" onchange="renderLivePreview()" style="width:auto; cursor:pointer;">
+                            <label for="pollMultiSelect" style="margin:0; text-transform:none; cursor:pointer;">Allow multi-select responses (Users can choose more than one option)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-container ai-box">
+                    <div class="step-heading"><div class="step-title-left"><span class="badge-style ai-badge">Universal AI Engine</span><span>AI Generation Hub</span></div></div>
+                    <div class="form-group">
+                        <label>AI Network Provider API Brand</label>
+                        <select id="aiProvider" onchange="adjustAiProviderDefaults()">
+                            <option value="openai">ChatGPT (OpenAI Core Stack)</option>
+                            <option value="google">Gemini (Google Developer Cluster)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Provider API Key</label>
+                        <input type="password" id="aiApiKey" placeholder="Paste your paid API provider key here...">
+                    </div>
+                    <div class="form-row form-group">
+                        <div style="flex:1;">
+                            <label>Target Engine Model Name</label>
+                            <input type="text" id="aiModelName" value="gpt-4o">
+                        </div>
+                        <div style="flex:1;" id="endpointContainer">
+                            <label>Proxy Target Gateway Endpoint URL</label>
+                            <input type="text" id="aiBaseUrl" value="https://api.openai.com/v1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Interactive Command Instructions Prompt</label>
+                        <textarea id="aiPrompt" placeholder="Write something epic, professional, or funny for the discord chat..."></textarea>
+                    </div>
+                    <button class="btn btn-ai" id="aiGenerateBtn" onclick="executeUniversalAiPipeline()"><span>Generate & Auto-Paste Text</span></button>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-title-left"><div class="step-number">3</div><span>Main Message Payload Context</span></div></div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 8px; border-radius: 6px; margin-bottom: 12px;">
+                        <label style="margin: 0;">Text Style Font Engine:</label>
+                        <select id="fontEngineSelect" style="width: auto; padding: 4px;" onchange="renderLivePreview()">
+                            <option value="normal">Default Standard Regular</option>
+                            <option value="gothic">𝔊𝔬𝔱𝔥𝔦𝔠 / Fraktur Layout</option>
+                            <option value="script">𝓢𝓬𝓻𝓲𝓹𝓽 / Cursive Hand</option>
+                            <option value="mono">Ｍ𝚘𝚗𝚘𝚜𝚙𝚊𝚌𝚎 Tech Block</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span>Message Content</span> <span id="mainCharCounter" class="char-counter">0 / 2000</span></label>
+                        <div class="format-bar">
+                            <button class="format-btn" onclick="wrapTextFormatting('**')">B</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('*')">I</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('__')">U</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('~~')">S</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('`')">Code</button>
+                            <button class="format-btn" onclick="wrapTextFormatting('||')">Spoiler</button>
+                        </div>
+                        
+                        <div class="express-quick-pad">
+                            <span style="font-size:10px; align-self:center; font-weight:bold; color:var(--text-muted); margin-right:4px;">EXPRESS PAD:</span>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('🔥')">🔥</button>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('✨')">✨</button>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('🎉')">🎉</button>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('💯')">💯</button>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('🚀')">🚀</button>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmsyd3Y1NXZwcmhpcm1mY2Z0ZzR3dmVsc3g4bXJ6cnN5dm8yNTRnbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/cuXf9XGmqXWms/giphy.gif')">Clean Dance GIF 🕺</button>
+                            <button class="express-item" onclick="insertDirectTextAtCursor('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXN6cmVjNXp3MnVwbTV6dXZxOHJ2dG1icGpqenB1dW44dWNhNHh6OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tXhBA26kiVzyM/giphy.gif')">Hyped Cat GIF 🐱</button>
+                        </div>
+
+                        <textarea id="content" class="textarea-with-bar" placeholder="Type text content here..." oninput="renderLivePreview()"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-top:15px;">
+                        <label style="display:flex; justify-content:space-between;">
+                            <span>Append Client Message Mock Reactions</span>
+                            <span style="color:var(--discord-blue); font-size:10px;">Clickable Hub Simulator</span>
+                        </label>
+                        <div id="reactionsBuilderContainer" class="reactions-builder"></div>
+                        <button class="btn btn-secondary" style="width:100%; margin-top:6px;" onclick="addCustomMockReactionFieldRow()">+ Add Interactive Message Reaction Icon</button>
+                    </div>
+                </div>
+
+                <div class="step-container yt-box">
+                    <div class="step-heading"><div class="step-title-left"><span class="badge-style yt-badge">YouTube Hub</span><span>Video Search & Smart Embedder</span></div></div>
+                    <div class="form-group">
+                        <label>Paste Video Link / Content Identifier</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="ytSearchInput" placeholder="Enter keywords or link (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)...">
+                            <button class="btn btn-yt" onclick="processYouTubeSearchQuery()">Fetch / Parse</button>
+                        </div>
+                        <span style="font-size:10px; color: var(--text-muted); display:block; margin-top:4px;">Appends a clean text URL directly onto your broadcast payload so Discord builds its own native video player.</span>
+                    </div>
+                    <div id="ytAssistantResult" style="display:none; font-size:12px; background: var(--bg-card); padding:8px; border-radius:6px; align-items:center; justify-content:space-between;">
+                        <span id="ytStatusTxt" style="color:var(--green); font-weight:bold;">Video Linked!</span>
+                        <button class="btn btn-red" style="padding:2px 6px; font-size:10px;" onclick="clearYouTubeEmbedAttachment()">Clear Video</button>
+                    </div>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-title-left"><div class="step-number">4</div><span>Premium Native Media Upload Suite</span></div></div>
+                    <div class="form-group">
+                        <label>Upload Directly (Photos, Animations, GIFs, or Videos)</label>
+                        <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display: none;" onchange="handleLocalMediaUpload(this)">
+                        <div class="media-upload-zone" onclick="document.getElementById('mediaFileInput').click()">
+                            <p id="mediaUploadPrompt">Click here to browse local disk storage files (.png, .jpg, .gif, .mp4, .webm)</p>
+                        </div>
+                        <button class="btn btn-red" id="clearMediaBtn" style="margin-top: 10px; display: none; padding: 4px 8px; font-size: 11px;" onclick="clearUploadedMediaAttachment()">Remove Uploaded Asset File</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Alternative Asset Link Input URL (Overrides Local File)</label>
+                        <input type="url" id="mediaUrl" placeholder="https://i.imgur.com/example.gif" oninput="renderLivePreview()">
+                    </div>
+                </div>
+
+                <div class="step-container">
+                    <div class="step-heading"><div class="step-title-left"><div class="step-number">5</div><span>Structured Embed Designer Card</span></div></div>
+                    
+                    <div class="form-row" style="margin-bottom: 10px;">
+                        <div style="flex:1;">
+                            <label>Embed Author Name</label>
+                            <input type="text" id="embAuthorName" placeholder="Author / Brand String..." oninput="renderLivePreview()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Embed Author Icon URL</label>
+                            <input type="url" id="embAuthorIcon" placeholder="https://..." oninput="renderLivePreview()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Embed Header Title</label>
+                        <input type="text" id="embTitle" placeholder="Bold Header Title String..." oninput="renderLivePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label><span>Embed Core Description Narrative</span> <span id="embedCharCounter" class="char-counter">0 / 4000</span></label>
+                        <textarea id="embDesc" placeholder="Enter paragraph content entries..." oninput="renderLivePreview()"></textarea>
+                    </div>
+                    
+                    <div class="form-row" style="margin-bottom: 10px;">
+                        <div style="flex:1;">
+                            <label>Embed Thumbnail Image URL</label>
+                            <input type="url" id="embThumbnail" placeholder="Mini side image link..." oninput="renderLivePreview()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Embed Large Content Image URL</label>
+                            <input type="url" id="embMainImage" placeholder="Large bottom banner link..." oninput="renderLivePreview()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Highlight Strip Accent Color</label>
+                        <input type="color" id="embColor" value="#5865F2" style="height:40px; width:100%; border:1px solid #1e1f22; background:none; cursor:pointer; border-radius:6px;" oninput="renderLivePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Custom Embed Value Matrix Fields</label>
+                        <div class="embed-fields-builder" id="embedFieldsContainer"></div>
+                        <button class="btn btn-secondary" style="margin-top:8px; width:100%;" onclick="addCustomEmbedFieldRow()">+ Append Custom Field Grid Block</button>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 10px;">
+                        <div style="flex:1;">
+                            <label>Embed Footer Text</label>
+                            <input type="text" id="embFooterText" placeholder="Footer notation metadata..." oninput="renderLivePreview()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Embed Footer Icon URL</label>
+                            <input type="url" id="embFooterIcon" placeholder="https://..." oninput="renderLivePreview()">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="preview-pane">
+                <div style="font-size:12px; text-transform:uppercase; font-weight:bold; color:var(--text-muted); margin-bottom:12px;">Live Feed Display Output Window Monitor</div>
+                
+                <div class="discord-chat-view">
+                    <img id="prevPfpImg" src="" style="display:none; width: 38px; height: 38px; border-radius: 50%;">
+                    <div id="prevPfpFallback" class="fallback-letter-avatar">B</div>
+
+                    <div class="chat-message-content">
+                        <div class="chat-header">
+                            <span id="prevUser" class="chat-user">Bot</span>
+                            <span class="chat-tag">Bot</span>
+                            <span class="chat-timestamp">Today at 4:20 PM</span>
+                        </div>
+                        <div id="prevContent" class="chat-text"></div>
+
+                        <img id="mediaPrevImg" class="preview-media-attachment" src="">
+                        <video id="mediaPrevVid" class="preview-media-attachment" controls autoplay muted loop></video>
+
+                        <div id="prevPollCard" class="mock-poll-container">
+                            <div id="prevPollQuestion" class="mock-poll-question"> Poll Question</div>
+                            <div id="prevPollChoicesContainer"></div>
+                        </div>
+
+                        <div id="prevEmbed" class="mock-embed" style="display: none;">
+                            <div id="prevEmbAuthorNode" class="embed-author" style="display: none;">
+                                <img id="prevEmbAuthorIcon" class="embed-author-icon" src="">
+                                <span id="prevEmbAuthorName"></span>
+                            </div>
+                            
+                            <img id="prevEmbThumbnail" class="embed-thumbnail-img" src="">
+                            
+                            <div id="prevEmbTitle" class="embed-title"></div>
+                            <div id="prevEmbDesc" class="embed-desc"></div>
+                            <div id="prevEmbFieldsContainer" class="embed-preview-fields"></div>
+                            
+                            <img id="prevEmbMainImg" class="embed-main-img" src="">
+                            
+                            <div id="prevEmbFooterNode" class="embed-footer" style="display: none;">
+                                <img id="prevEmbFooterIcon" class="embed-footer-icon" src="">
+                                <span id="prevEmbFooterText"></span>
+                            </div>
+                        </div>
+
+                        <div id="prevReactionListWrap" class="mock-reaction-list-wrap"></div>
+
+                    </div>
+                </div>
+
+                <div style="margin-top: auto; padding-top: 20px;">
+                    <button class="btn btn-lively" style="width:100%; padding:15px; font-size:16px;" onclick="transmitWebhookPayloadToServer()">
+                        <span>Deploy Broadcast Node Message To Discord Server</span>
+                    </button>
+                    <div id="executionStatus" style="text-align:center; margin-top:10px; font-weight:bold; font-size:13px; white-space:pre-wrap; word-break:break-word;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="creditsModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'creditsModal')">
+    <div class="modal-card">
+        <div class="modal-header"><span style="font-size:24px;">🤖</span><strong style="color:white; margin-left:10px;">LIVELY BOT Suite Engine</strong></div>
+        <div class="modal-body" style="color:var(--text-normal); margin:15px 0;">
+            <p>This premium dashboard architecture is powered by a collaborative dual deployment configuration map:</p>
+            <div style="background:var(--bg-card); padding:12px; border-radius:6px; margin-bottom:10px;">
+                <strong style="color:#fff;">Core Code Base Engineering Systems Designer:</strong>
+                <p style="margin:5px 0 0 0; color:var(--discord-blue); font-weight:bold;">Gemini AI & User Assembly Collaboration Workspace</p>
+            </div>
+        </div>
+        <button class="btn btn-secondary" style="width:100%; padding:10px;" onclick="toggleModal('creditsModal')">Close Interface</button>
+    </div>
+</div>
+
+<div id="tosModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'tosModal')">
+    <div class="modal-card">
+        <div class="modal-header"><strong style="color:white;">Terms of Service Agreement Protocol</strong></div>
+        <div class="modal-body" style="color:var(--text-normal); margin:15px 0;">
+            <p>By executing network connections via this webhook panel dashboard toolset infrastructure, you unconditionally affirm compliance with Discord rules.</p>
+        </div>
+        <button class="btn btn-green" style="width:100%; padding:10px;" onclick="toggleModal('tosModal')">Accept & Close</button>
+    </div>
+</div>
+
+<script>
+    const FONT_MAPS = {
+        gothic: { origin: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", vector: "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℛ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷" },
+        script: { origin: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", vector: "𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺锐𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃" },
+        mono: { origin: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", vector: "𝙰𝙱𝙲𝙳Ｅ𝙵𝙶𝙷𝙸𝙹𝙺𝙻Ｍblock𝙽𝙾Ｐ𝚀𝚁𝚂Ｔ𝚄𝚅𝚆𝚇Ｙ𝚉𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿" }
+    };
+
+    let appState = { blueprints: {}, profiles: [], activeProfileId: null, currentLang: 'en' };
+    let attachedMediaBlob = null;
+    let verifiedYouTubeLink = null;
+    let customEmbedFields = [];
+    let pollChoicesArray = [
+        { text: "Option A", emoji: "🔥" },
+        { text: "Option B", emoji: "✨" }
+    ];
+    let pollSystemActive = false;
+    let mockReactionsArray = [
+        { emoji: "👍", count: 4, active: false },
+        { emoji: "👀", count: 7, active: true }
+    ];
+
+    window.onload = function() { initApplicationCache(); };
+
+    function changeLanguage(lang) { appState.currentLang = lang; saveStateToStorage(); }
+    function toggleWebhookFieldMask() { const input = document.getElementById('webhookUrl'); input.type = (input.type === "password") ? "text" : "password"; }
+
+    async function triggerPingTest() {
+        const webhookUrl = document.getElementById('webhookUrl').value.trim();
+        if (!webhookUrl) { alert("Please provide a valid connection link first."); return; }
+        try {
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: "⚡ **LIVELY BOT Suite Connection Link Test Status:** `ACTIVE / SECURE`" })
+            });
+            alert("Ping Delivered Successfully! Node connection active.");
+        } catch (err) { alert("Network pipeline error occurred while verifying connection."); }
+    }
+
+    function insertDirectTextAtCursor(insertedString) {
+        const txtArea = document.getElementById('content');
+        const startPos = txtArea.selectionStart;
+        const endPos = txtArea.selectionEnd;
+        const currentVal = txtArea.value;
+        txtArea.value = currentVal.substring(0, startPos) + insertedString + currentVal.substring(endPos);
+        txtArea.focus();
+        txtArea.selectionStart = startPos + insertedString.length;
+        txtArea.selectionEnd = startPos + insertedString.length;
+        renderLivePreview();
+    }
+
+    function buildUndocumentedTimestampString() {
+        const pickerValue = document.getElementById('timestampPicker').value;
+        if (!pickerValue) return;
+        const formatFlag = document.getElementById('timestampFormat').value;
+        const epochSeconds = Math.floor(new Date(pickerValue).getTime() / 1000);
+        const formatString = `<t:${epochSeconds}:${formatFlag}>`;
+        document.getElementById('generatedTimestampResult').value = formatString;
+    }
+
+    function injectTimestampToPayloadTextarea() {
+        const timestampTag = document.getElementById('generatedTimestampResult').value;
+        if (!timestampTag) { alert("Please pick a valid calendar date time threshold first."); return; }
+        insertDirectTextAtCursor(timestampTag);
+    }
+
+    function injectSystemPreset(type) {
+        if (type === 'welcome') {
+            document.getElementById('content').value = "🎉 **Welcome to the Server Community Network Hub!**";
+            document.getElementById('embTitle').value = "✅ Community Onboarding Checklist";
+            document.getElementById('embDesc').value = "We are absolutely thrilled to have you align with us! Please execute the initialization steps below to unlock your permissions node:\n\n1️⃣ Read through the directory terminal rules channel.\n2️⃣ Assign your identity tags in self-roles.\n3️⃣ Say hi in the general text lounge!";
+            document.getElementById('embColor').value = "#23a55a";
+            customEmbedFields = [
+                { name: "Server Rules", value: "🔗 <#1234567890>" },
+                { name: "Support Matrix", value: "🛠️ Open a ticket in help channel" }
+            ];
+        } else if (type === 'patch') {
+            document.getElementById('content').value = "🚀 **CRITICAL CORE NETWORK CONFIGURATION UPDATE ISSUED**";
+            document.getElementById('embTitle').value = "📦 V2.4.0 Engine Update Patch Logs";
+            document.getElementById('embDesc').value = "The engineering systems cluster has loaded a series of global optimization modules into the main layout mainframe framework.";
+            document.getElementById('embColor').value = "#5865f2";
+            customEmbedFields = [
+                { name: "⚡ Optimization", value: "API connection payload compilation overhead reduced by 40%." },
+                { name: "🐞 Bug Purges", value: "Resolved media multi-part packet attachment structural error." }
+            ];
+        }
+        rebuildCustomEmbedFieldsUI();
+        renderLivePreview();
+    }
+
+    function saveCurrentAsBlueprint() {
+        const name = document.getElementById('blueprintName').value.trim();
+        if (!name) { alert("Please enter a blueprint template label."); return; }
+        appState.blueprints[name] = {
+            content: document.getElementById('content').value,
+            embTitle: document.getElementById('embTitle').value,
+            embDesc: document.getElementById('embDesc').value,
+            embColor: document.getElementById('embColor').value,
+            mediaUrl: document.getElementById('mediaUrl').value,
+            youtubeLink: verifiedYouTubeLink,
+            fields: customEmbedFields,
+            pollActive: pollSystemActive,
+            pollQuestion: document.getElementById('pollQuestion').value,
+            pollChoices: pollChoicesArray,
+            pollMulti: document.getElementById('pollMultiSelect').checked,
+            reactions: mockReactionsArray,
+            threadId: document.getElementById('webhookThreadId').value,
+            avatarOverrideUrl: document.getElementById('avatarOverrideUrl').value,
+            embAuthorName: document.getElementById('embAuthorName').value,
+            embAuthorIcon: document.getElementById('embAuthorIcon').value,
+            embThumbnail: document.getElementById('embThumbnail').value,
+            embMainImage: document.getElementById('embMainImage').value,
+            embFooterText: document.getElementById('embFooterText').value,
+            embFooterIcon: document.getElementById('embFooterIcon').value
+        };
+        saveStateToStorage(); updateBlueprintDropdownUI();
+        document.getElementById('blueprintName').value = "";
+        alert(`Blueprint template saved successfully.`);
+    }
+
+    function updateBlueprintDropdownUI() {
+        const select = document.getElementById('blueprintSelect');
+        select.innerHTML = `<option value="">-- Load Quick Blueprint --</option>`;
+        for (let name in appState.blueprints) {
+            const opt = document.createElement('option'); opt.value = name; opt.textContent = name; select.appendChild(opt);
+        }
+    }
+
+    function loadSelectedBlueprint() {
+        const name = document.getElementById('blueprintSelect').value;
+        if (!name || !appState.blueprints[name]) return;
+        const bp = appState.blueprints[name];
+        document.getElementById('content').value = bp.content || "";
+        document.getElementById('embTitle').value = bp.embTitle || "";
+        document.getElementById('embDesc').value = bp.embDesc || "";
+        document.getElementById('embColor').value = bp.embColor || "#5865F2";
+        document.getElementById('mediaUrl').value = bp.mediaUrl || "";
+        document.getElementById('webhookThreadId').value = bp.threadId || "";
+        
+        document.getElementById('avatarOverrideUrl').value = bp.avatarOverrideUrl || "";
+        document.getElementById('embAuthorName').value = bp.embAuthorName || "";
+        document.getElementById('embAuthorIcon').value = bp.embAuthorIcon || "";
+        document.getElementById('embThumbnail').value = bp.embThumbnail || "";
+        document.getElementById('embMainImage').value = bp.embMainImage || "";
+        document.getElementById('embFooterText').value = bp.embFooterText || "";
+        document.getElementById('embFooterIcon').value = bp.embFooterIcon || "";
+
+        if (bp.youtubeLink) {
+            verifiedYouTubeLink = bp.youtubeLink;
+            document.getElementById('ytSearchInput').value = bp.youtubeLink;
+            document.getElementById('ytAssistantResult').style.display = "flex";
+        } else { clearYouTubeEmbedAttachment(); }
+
+        pollSystemActive = bp.pollActive || false;
+        document.getElementById('pollToggle').checked = pollSystemActive;
+        document.getElementById('pollWizardFields').style.display = pollSystemActive ? "block" : "none";
+        document.getElementById('pollQuestion').value = bp.pollQuestion || "";
+        pollChoicesArray = bp.pollChoices || [];
+        document.getElementById('pollMultiSelect').checked = bp.pollMulti || false;
+        mockReactionsArray = bp.reactions || [];
+
+        customEmbedFields = bp.fields || [];
+        rebuildCustomEmbedFieldsUI();
+        rebuildPollChoicesUI();
+        rebuildMockReactionsBuilderUI();
+        renderLivePreview();
+    }
+
+    function addCustomMockReactionFieldRow() {
+        mockReactionsArray.push({ emoji: "🔥", count: 1, active: false });
+        rebuildMockReactionsBuilderUI();
+        renderLivePreview();
+    }
+
+    function removeMockReactionFieldRow(idx) {
+        mockReactionsArray.splice(idx, 1);
+        rebuildMockReactionsBuilderUI();
+        renderLivePreview();
+    }
+
+    function updateMockReactionPropertyValue(idx, prop, val) {
+        mockReactionsArray[idx][prop] = (prop === 'count') ? parseInt(val) || 0 : val;
+        renderLivePreview();
+    }
+
+    function rebuildMockReactionsBuilderUI() {
+        const container = document.getElementById('reactionsBuilderContainer');
+        container.innerHTML = "";
+        mockReactionsArray.forEach((react, idx) => {
+            const row = document.createElement('div');
+            row.className = "reaction-row";
+            row.innerHTML = `
+                <input type="text" value="${react.emoji}" placeholder="Emoji" oninput="updateMockReactionPropertyValue(${idx}, 'emoji', this.value)" style="width:55px; text-align:center; padding:6px;">
+                <input type="text" value="${react.count}" placeholder="Count" oninput="updateMockReactionPropertyValue(${idx}, 'count', this.value)" style="width:70px; padding:6px;">
+                <button class="btn btn-red" style="padding:6px;" onclick="removeMockReactionFieldRow(${idx})">✕</button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function toggleReactionSelectionState(idx) {
+        mockReactionsArray[idx].active = !mockReactionsArray[idx].active;
+        mockReactionsArray[idx].count += mockReactionsArray[idx].active ? 1 : -1;
+        rebuildMockReactionsBuilderUI();
+        renderLivePreview();
+    }
+
+    function processYouTubeSearchQuery() {
+        const input = document.getElementById('ytSearchInput').value.trim();
+        if (!input) return;
+        if (input.includes("youtube.com") || input.includes("youtu.be")) { verifiedYouTubeLink = input; } 
+        else { verifiedYouTubeLink = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; document.getElementById('ytSearchInput').value = verifiedYouTubeLink; }
+        document.getElementById('ytAssistantResult').style.display = "flex";
+        renderLivePreview();
+    }
+
+    function clearYouTubeEmbedAttachment() {
+        verifiedYouTubeLink = null; document.getElementById('ytSearchInput').value = "";
+        document.getElementById('ytAssistantResult').style.display = "none"; renderLivePreview();
+    }
+
+    function addCustomEmbedFieldRow() { customEmbedFields.push({ name: "Field Title", value: "Field Context Value" }); rebuildCustomEmbedFieldsUI(); renderLivePreview(); }
+    function removeCustomEmbedFieldRow(index) { customEmbedFields.splice(index, 1); rebuildCustomEmbedFieldsUI(); renderLivePreview(); }
+    function updateCustomEmbedFieldValue(index, property, value) { customEmbedFields[index][property] = value; renderLivePreview(); }
+
+    function rebuildCustomEmbedFieldsUI() {
+        const container = document.getElementById('embedFieldsContainer'); container.innerHTML = "";
+        customEmbedFields.forEach((field, idx) => {
+            const row = document.createElement('div'); row.className = "embed-field-row";
+            row.innerHTML = `
+                <input type="text" value="${field.name}" placeholder="Title" oninput="updateCustomEmbedFieldValue(${idx}, 'name', this.value)" style="flex:1; padding:6px;">
+                <input type="text" value="${field.value}" placeholder="Value" oninput="updateCustomEmbedFieldValue(${idx}, 'value', this.value)" style="flex:2; padding:6px;">
+                <button class="btn btn-red" style="padding:6px;" onclick="removeCustomEmbedFieldRow(${idx})">✕</button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function toggleNativePollSystem(enabled) {
+        pollSystemActive = enabled; document.getElementById('pollWizardFields').style.display = enabled ? "block" : "none";
+        if(enabled && pollChoicesArray.length === 0) { pollChoicesArray = [{ text: "Yes", emoji: "👍" }, { text: "No", emoji: "👎" }]; }
+        rebuildPollChoicesUI(); renderLivePreview();
+    }
+    function addCustomPollChoiceItem() { if(pollChoicesArray.length >= 10) { alert("Max 10 options."); return; } pollChoicesArray.push({ text: `Option ${pollChoicesArray.length + 1}`, emoji: "✨" }); rebuildPollChoicesUI(); renderLivePreview(); }
+    function removePollChoiceItem(idx) { pollChoicesArray.splice(idx, 1); rebuildPollChoicesUI(); renderLivePreview(); }
+    function updatePollChoiceValue(idx, prop, val) { pollChoicesArray[idx][prop] = val; renderLivePreview(); }
+
+    function rebuildPollChoicesUI() {
+        const container = document.getElementById('pollChoicesContainer'); container.innerHTML = "";
+        pollChoicesArray.forEach((choice, idx) => {
+            const row = document.createElement('div'); row.className = "poll-choice-row";
+            row.innerHTML = `
+                <input type="text" value="${choice.emoji || ''}" placeholder="Emoji" oninput="updatePollChoiceValue(${idx}, 'emoji', this.value)" style="width:55px; text-align:center; padding:6px;">
+                <input type="text" value="${choice.text}" placeholder="Choice description..." oninput="updatePollChoiceValue(${idx}, 'text', this.value)" style="flex:1; padding:6px;">
+                <button class="btn btn-red" style="padding:6px;" onclick="removePollChoiceItem(${idx})">✕</button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    async function handleWebhookUrlInput() {
+        const inputUrl = document.getElementById('webhookUrl').value.trim();
+        const indicator = document.getElementById('syncIndicator');
+        const cardElement = document.getElementById('webhookStepCard');
+        updateActiveProfileData();
+        if (inputUrl.startsWith("https://discord.com/api/webhooks/") || inputUrl.startsWith("https://discordapp.com/api/webhooks/")) {
+            try {
+                indicator.style.color = "var(--discord-blue)"; indicator.textContent = "Connecting to Discord node framework...";
+                const response = await fetch(inputUrl); const data = await response.json();
+                if (data.name) {
+                    document.getElementById('username').value = data.name;
+                    const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+                    if (active) {
+                        active.username = data.name;
+                        if (data.avatar) {
+                            active.avatarBase64 = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`;
+                            document.getElementById('avatarZone').style.backgroundImage = `url(${active.avatarBase64})`;
+                            extractColorPaletteFromImageSource(active.avatarBase64);
+                        }
+                    }
+                    cardElement.classList.remove('highlight-required'); cardElement.style.border = "1px solid var(--green)";
+                    indicator.style.color = "var(--green)"; indicator.textContent = `Success! Profile synced: "${data.name}"`;
+                    saveStateToStorage(); renderProfileSidebarList(); renderLivePreview();
+                }
+            } catch (err) { indicator.style.color = "var(--red)"; indicator.textContent = "Error pulling info from Discord."; }
+        } else { cardElement.classList.add('highlight-required'); indicator.style.color = "var(--text-muted)"; indicator.textContent = "Paste raw target endpoint link."; }
+    }
+
+    function extractColorPaletteFromImageSource(srcUrl) {
+        const img = new Image(); img.crossOrigin = "Anonymous";
+        img.onload = function() {
+            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+            canvas.width = 1; canvas.height = 1; ctx.drawImage(img, 0, 0, 1, 1);
+            const pixelData = ctx.getImageData(0, 0, 1, 1).data;
+            const hexResult = "#" + ((1 << 24) + (pixelData[0] << 16) + (pixelData[1] << 8) + pixelData[2]).toString(16).slice(1);
+            document.getElementById('embColor').value = hexResult; renderLivePreview();
+        };
+        img.src = srcUrl;
+    }
+
+    function adjustAiProviderDefaults() {
+        const provider = document.getElementById('aiProvider').value;
+        const modelInput = document.getElementById('aiModelName');
+        const container = document.getElementById('endpointContainer');
+        container.style.display = "block";
+        if(provider === 'openai') { modelInput.value = "gpt-4o"; document.getElementById('aiBaseUrl').value = "https://api.openai.com/v1"; }
+        else if(provider === 'google') { modelInput.value = "gemini-1.5-flash"; container.style.display = "none"; }
+    }
+
+    async function executeUniversalAiPipeline() {
+        const provider = document.getElementById('aiProvider').value; const key = document.getElementById('aiApiKey').value.trim();
+        const model = document.getElementById('aiModelName').value.trim(); const baseUrl = document.getElementById('aiBaseUrl').value.trim();
+        const prompt = document.getElementById('aiPrompt').value.trim(); const genBtn = document.getElementById('aiGenerateBtn');
+        if(!key || !prompt) { alert("API Key and prompt are required."); return; }
+        genBtn.disabled = true; genBtn.textContent = "Processing AI Pipeline Matrix...";
+        let fetchUrl = "", fetchHeaders = { "Content-Type": "application/json" }, fetchBody = {};
+        if(provider === 'openai') { fetchUrl = `${baseUrl}/chat/completions`; fetchHeaders["Authorization"] = `Bearer ${key}`; fetchBody = { model: model, messages: [{ role: "user", content: prompt }] }; }
+        else if(provider === 'google') { fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`; fetchBody = { contents: [{ parts: [{ text: prompt }] }] }; }
+        try {
+            const response = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: JSON.stringify(fetchBody) }); const data = await response.json();
+            let outputText = (provider === 'openai') ? data.choices[0].message.content : data.candidates[0].content.parts[0].text;
+            document.getElementById('content').value = outputText; renderLivePreview();
+        } catch (error) { alert(`AI Fault: ${error.message}`); } finally { genBtn.disabled = false; genBtn.textContent = "Generate & Auto-Paste Text"; }
+    }
+
+    function transformText(text, type) {
+        if (!FONT_MAPS[type] || !text) return text; let result = ""; const mapping = FONT_MAPS[type]; const vectorArray = Array.from(mapping.vector);
+        for (let char of text) { let index = mapping.origin.indexOf(char); result += index !== -1 ? vectorArray[index] : char; } return result;
+    }
+    function wrapTextFormatting(symbol) {
+        const txtArea = document.getElementById('content'); const start = txtArea.selectionStart, end = txtArea.selectionEnd, text = txtArea.value;
+        txtArea.value = text.substring(0, start) + symbol + text.substring(start, end) + symbol + text.substring(end); renderLivePreview();
+    }
+    function handleAvatarFileSelect(input) {
+        const file = input.files[0]; if (file) {
+            const reader = new FileReader(); reader.onload = function(e) {
+                const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+                if (active) { active.avatarBase64 = e.target.result; saveStateToStorage(); document.getElementById('avatarZone').style.backgroundImage = `url(${e.target.result})`; extractColorPaletteFromImageSource(e.target.result); renderProfileSidebarList(); }
+            }; reader.readAsDataURL(file);
+        }
+    }
+    function handleLocalMediaUpload(input) { const file = input.files[0]; if (file) { attachedMediaBlob = file; document.getElementById('mediaUploadPrompt').textContent = `Loaded Attachment: ${file.name}`; document.getElementById('clearMediaBtn').style.display = "inline-flex"; renderLivePreview(); } }
+    function clearUploadedMediaAttachment() { attachedMediaBlob = null; document.getElementById('mediaFileInput').value = ""; document.getElementById('mediaUploadPrompt').textContent = "Click to browse local assets"; document.getElementById('clearMediaBtn').style.display = "none"; renderLivePreview(); }
+    function exportProfilesConfiguration() { const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState))); downloadAnchor.setAttribute("download", "lively_bot_backup.json"); downloadAnchor.click(); }
+    function importProfilesConfiguration(input) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { appState = JSON.parse(e.target.result); saveStateToStorage(); initApplicationCache(); }; reader.readAsText(file); }
+    function toggleModal(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
+    function closeModalOnOuterClick(e, id) { if(e.target.id === id) toggleModal(id); }
+
+    function initApplicationCache() {
+        const cache = localStorage.getItem('lively_bot_v8'); if (cache) { try { appState = JSON.parse(cache); } catch(e) {} }
+        if (!appState.profiles || appState.profiles.length === 0) { appState.profiles = [{ id: 'p_' + Date.now(), webhook: '', username: 'Lively Spark Bot', avatarBase64: '', avatarOverrideUrl: '' }]; appState.activeProfileId = appState.profiles[0].id; }
+        if (!appState.blueprints) appState.blueprints = {};
+        saveStateToStorage(); renderProfileSidebarList(); updateBlueprintDropdownUI(); loadProfileIntoEditor(appState.activeProfileId); changeLanguage(appState.currentLang || 'en');
+    }
+    function saveStateToStorage() { localStorage.setItem('lively_bot_v8', JSON.stringify(appState)); }
+
+    function renderProfileSidebarList() {
+        const container = document.getElementById('profileContainer'); container.innerHTML = '';
+        appState.profiles.forEach(p => {
+            const card = document.createElement('div'); card.className = `profile-card ${p.id === appState.activeProfileId ? 'active' : ''}`; card.onclick = () => loadProfileIntoEditor(p.id);
+            let avatarHtml = p.avatarBase64 ? `<img class="profile-pfp" src="${p.avatarBase64}">` : `<div class="fallback-letter-avatar">L</div>`;
+            card.innerHTML = `${avatarHtml}<div class="profile-title">${p.username || 'Unnamed Unit'}</div>`; container.appendChild(card);
+        });
+    }
+
+    function createNewProfile() { const id = 'p_' + Date.now(); appState.profiles.push({ id: id, webhook: '', username: 'Lively Agent Node', avatarBase64: '', avatarOverrideUrl: '' }); appState.activeProfileId = id; saveStateToStorage(); renderProfileSidebarList(); loadProfileIntoEditor(id); }
+    function deleteCurrentProfile() { if (appState.profiles.length <= 1) return; appState.profiles = appState.profiles.filter(p => p.id !== appState.activeProfileId); appState.activeProfileId = appState.profiles[0].id; saveStateToStorage(); renderProfileSidebarList(); loadProfileIntoEditor(appState.activeProfileId); }
+    
+    function updateActiveProfileData() { 
+        const active = appState.profiles.find(p => p.id === appState.activeProfileId); 
+        if (active) { 
+            active.webhook = document.getElementById('webhookUrl').value.trim(); 
+            active.username = document.getElementById('username').value.trim(); 
+            active.avatarOverrideUrl = document.getElementById('avatarOverrideUrl').value.trim();
+            saveStateToStorage(); 
+            renderProfileSidebarList(); 
+            renderLivePreview(); 
+        } 
+    }
+
+    function loadProfileIntoEditor(id) {
+        appState.activeProfileId = id; const target = appState.profiles.find(p => p.id === id);
+        if (target) {
+            document.getElementById('webhookUrl').value = target.webhook || ''; 
+            document.getElementById('username').value = target.username || '';
+            document.getElementById('avatarOverrideUrl').value = target.avatarOverrideUrl || '';
+            const zone = document.getElementById('avatarZone'); 
+            if (target.avatarBase64) zone.style.backgroundImage = `url(${target.avatarBase64})`; else zone.style.backgroundImage = 'none';
+            renderLivePreview();
+        }
+    }
+
+    function renderLivePreview() {
+        const active = appState.profiles.find(p => p.id === appState.activeProfileId);
+        const username = document.getElementById('username').value.trim() || "Lively Bot";
+        document.getElementById('prevUser').textContent = username;
+
+        const imgEl = document.getElementById('prevPfpImg'), fallbackEl = document.getElementById('prevPfpFallback');
+        const avOverride = document.getElementById('avatarOverrideUrl').value.trim();
+        
+        if (avOverride) {
+            imgEl.src = avOverride; imgEl.style.display = "block"; fallbackEl.style.display = "none";
+        } else if (active && active.avatarBase64) { 
+            imgEl.src = active.avatarBase64; imgEl.style.display = "block"; fallbackEl.style.display = "none"; 
+        } else { 
+            fallbackEl.textContent = username.charAt(0).toUpperCase(); imgEl.style.display = "none"; fallbackEl.style.display = "flex"; 
+        }
+
+        const fontMode = document.getElementById('fontEngineSelect').value;
+        const rawContent = document.getElementById('content').value;
+        document.getElementById('mainCharCounter').textContent = `${rawContent.length} / 2000`;
+        document.getElementById('prevContent').textContent = transformText(rawContent, fontMode);
+
+        const imgPrev = document.getElementById('mediaPrevImg'), vidPrev = document.getElementById('mediaPrevVid');
+        imgPrev.style.display = "none"; vidPrev.style.display = "none";
+
+        if (attachedMediaBlob) {
+            const objectUrl = URL.createObjectURL(attachedMediaBlob);
+            if (attachedMediaBlob.type.startsWith('video/')) { vidPrev.src = objectUrl; vidPrev.style.display = "block"; } else { imgPrev.src = objectUrl; imgPrev.style.display = "block"; }
+        } else {
+            const mediaUrl = document.getElementById('mediaUrl').value.trim();
+            if(mediaUrl) { if(mediaUrl.match(/\.(mp4|webm|mov|ogg)$/i)) { vidPrev.src = mediaUrl; vidPrev.style.display = "block"; } else { imgPrev.src = mediaUrl; imgPrev.style.display = "block"; } }
+        }
+
+        /* POLL RENDER BLOCK */
+        const pollCard = document.getElementById('prevPollCard'), pollContainer = document.getElementById('prevPollChoicesContainer');
+        if (pollSystemActive) {
+            pollCard.style.display = "block"; document.getElementById('prevPollQuestion').textContent = "📊 " + (document.getElementById('pollQuestion').value.trim() || "Poll");
+            pollContainer.innerHTML = "";
+            pollChoicesArray.forEach(choice => {
+                const choiceEl = document.createElement('div'); choiceEl.className = "mock-poll-choice-item";
+                choiceEl.innerHTML = `<div class="mock-poll-choice-left"><span>${choice.emoji || '🔹'}</span><span>${choice.text || 'Choice Content'}</span></div><div class="mock-poll-circle" style="${document.getElementById('pollMultiSelect').checked ? 'border-radius:4px;' : ''}"></div>`;
+                pollContainer.appendChild(choiceEl);
+            });
+        } else { pollCard.style.display = "none"; }
+
+        /* ADVANCED EMBED RENDERING */
+        const title = document.getElementById('embTitle').value.trim();
+        const desc = document.getElementById('embDesc').value.trim();
+        const color = document.getElementById('embColor').value;
+        const embedWrapper = document.getElementById('prevEmbed');
+        
+        const autName = document.getElementById('embAuthorName').value.trim();
+        const autIcon = document.getElementById('embAuthorIcon').value.trim();
+        const thumbUrl = document.getElementById('embThumbnail').value.trim();
+        const bannerUrl = document.getElementById('embMainImage').value.trim();
+        const footText = document.getElementById('embFooterText').value.trim();
+        const footIcon = document.getElementById('embFooterIcon').value.trim();
+
+        document.getElementById('embedCharCounter').textContent = `${desc.length} / 4000`;
+        
+        if(title || desc || customEmbedFields.length > 0 || autName || thumbUrl || bannerUrl || footText) {
+            embedWrapper.style.display = "flex"; 
+            embedWrapper.style.borderLeftColor = color; 
+            document.getElementById('prevEmbTitle').textContent = title; 
+            document.getElementById('prevEmbDesc').textContent = desc;
+            
+            // Author logic
+            const autNode = document.getElementById('prevEmbAuthorNode');
+            if (autName) {
+                autNode.style.display = "flex";
+                document.getElementById('prevEmbAuthorName').textContent = autName;
+                document.getElementById('prevEmbAuthorIcon').src = autIcon || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='gray' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12'/></svg>";
+            } else { autNode.style.display = "none"; }
+
+            // Thumbnail logic
+            const thumbImg = document.getElementById('prevEmbThumbnail');
+            if (thumbUrl) { thumbImg.src = thumbUrl; thumbImg.style.display = "block"; } else { thumbImg.style.display = "none"; }
+
+            // Main image banner logic
+            const mainImg = document.getElementById('prevEmbMainImg');
+            if (bannerUrl) { mainImg.src = bannerUrl; mainImg.style.display = "block"; } else { mainImg.style.display = "none"; }
+
+            // Footer logic
+            const footNode = document.getElementById('prevEmbFooterNode');
+            if (footText) {
+                footNode.style.display = "flex";
+                document.getElementById('prevEmbFooterText').textContent = footText;
+                document.getElementById('prevEmbFooterIcon').src = footIcon || "";
+                document.getElementById('prevEmbFooterIcon').style.display = footIcon ? "inline-block" : "none";
+            } else { footNode.style.display = "none"; }
+
+            // Fields list compilation
+            const previewFieldsContainer = document.getElementById('prevEmbFieldsContainer'); 
+            previewFieldsContainer.innerHTML = "";
+            customEmbedFields.forEach(f => { 
+                const fEl = document.createElement('div'); 
+                fEl.className = "embed-preview-field-item"; 
+                fEl.innerHTML = `<div class="embed-field-title">${f.name}</div><div class="embed-field-value">${f.value}</div>`; 
+                previewFieldsContainer.appendChild(fEl); 
+            });
+        } else { embedWrapper.style.display = "none"; }
+
+        /* REACTION LIST INTERFACE RENDERER */
+        const reactionWrap = document.getElementById('prevReactionListWrap');
+        reactionWrap.innerHTML = "";
+        mockReactionsArray.forEach((react, idx) => {
+            if(!react.emoji.trim()) return;
+            const item = document.createElement('div');
+            item.className = `mock-reaction-node ${react.active ? 'active-react' : ''}`;
+            item.onclick = () => toggleReactionSelectionState(idx);
+            item.innerHTML = `<span>${react.emoji}</span><span class="mock-reaction-count">${react.count}</span>`;
+            reactionWrap.appendChild(item);
+        });
+    }
+
+    async function transmitWebhookPayloadToServer() {
+        let webhookUrl = document.getElementById('webhookUrl').value.trim();
+        const statusEl = document.getElementById('executionStatus');
+
+        if (!webhookUrl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Error: Link field empty.'; return; }
+
+        const threadId = document.getElementById('webhookThreadId').value.trim();
+        if (threadId) { webhookUrl += (webhookUrl.includes('?') ? '&' : '?') + `thread_id=${threadId}`; }
+
+        const fontMode = document.getElementById('fontEngineSelect').value;
+        let mainContent = transformText(document.getElementById('content').value, fontMode);
+        const mediaUrl = document.getElementById('mediaUrl').value.trim();
+
+        if (mediaUrl) { mainContent += "\n" + mediaUrl; }
+        if (verifiedYouTubeLink) { mainContent += `\n${verifiedYouTubeLink}`; }
+
+        const payload = { username: document.getElementById('username').value.trim() || undefined };
+        if (mainContent) payload.content = mainContent;
+
+        const avOverride = document.getElementById('avatarOverrideUrl').value.trim();
+        if (avOverride) { payload.avatar_url = avOverride; }
+
+        if (pollSystemActive) {
+            payload.poll = {
+                question: { text: document.getElementById('pollQuestion').value.trim() || "Poll" },
+                answers: pollChoicesArray.map((choice, index) => ({ answer_id: index + 1, poll_media: { text: choice.text || `Option ${index + 1}`, emoji: choice.emoji ? { name: choice.emoji } : undefined } })),
+                allow_multiselect: document.getElementById('pollMultiSelect').checked, layout_type: 1
+            };
+        }
+
+        // Embed payload building assembly 
+        const title = document.getElementById('embTitle').value.trim();
+        const desc = document.getElementById('embDesc').value.trim();
+        const colorHex = document.getElementById('embColor').value;
+        const autName = document.getElementById('embAuthorName').value.trim();
+        const autIcon = document.getElementById('embAuthorIcon').value.trim();
+        const thumbUrl = document.getElementById('embThumbnail').value.trim();
+        const bannerUrl = document.getElementById('embMainImage').value.trim();
+        const footText = document.getElementById('embFooterText').value.trim();
+        const footIcon = document.getElementById('embFooterIcon').value.trim();
+
+        if (title || desc || customEmbedFields.length > 0 || autName || thumbUrl || bannerUrl || footText) {
+            const embed = { color: parseInt(colorHex.replace('#', ''), 16) };
+            if (title) embed.title = title; 
+            if (desc) embed.description = desc;
+            
+            if (autName) embed.author = { name: autName, icon_url: autIcon || undefined };
+            if (thumbUrl) embed.thumbnail = { url: thumbUrl };
+            if (bannerUrl) embed.image = { url: bannerUrl };
+            if (footText) embed.footer = { text: footText, icon_url: footIcon || undefined };
+            
+            if (customEmbedFields.length > 0) { embed.fields = customEmbedFields.map(f => ({ name: f.name, value: f.value, inline: true })); }
+            payload.embeds = [embed];
+        }
+
+        const sendForm = new FormData();
+        
+        /* CRITICAL UPGRADE: 
+           Discord v10 requires an indexed tracking object array inside the JSON form-data properties 
+           to acknowledge multi-part file payloads. This fixes the HTTP 400 error.
+        */
+        if (attachedMediaBlob) {
+            payload.attachments = [{
+                id: 0,
+                filename: attachedMediaBlob.name
+            }];
+            sendForm.append('files[0]', attachedMediaBlob, attachedMediaBlob.name);
+        }
+
+        sendForm.append('payload_json', JSON.stringify(payload));
+
+        try {
+            statusEl.style.color = 'var(--discord-blue)'; statusEl.textContent = 'Deploying node...';
+            const response = await fetch(webhookUrl, { method: 'POST', body: sendForm });
+            
+            if (response.ok) { 
+                statusEl.style.color = 'var(--green)'; statusEl.textContent = 'Transmission Successful!'; 
+            } else { 
+                // Enhanced diagnostics to break open structural array field problems
+                let diagnosticOutput = `API Rejection Status: ${response.status}`;
+                try {
+                    const errorJson = await response.json();
+                    if (errorJson.message) diagnosticOutput += `\nError Msg: ${errorJson.message}`;
+                    if (errorJson.errors) diagnosticOutput += `\nDetails: ${JSON.stringify(errorJson.errors)}`;
+                } catch(parseErr) {
+                    const textFallback = await response.text();
+                    if(textFallback) diagnosticOutput += `\nRaw response: ${textFallback}`;
+                }
+                statusEl.style.color = 'var(--red)'; 
+                statusEl.textContent = diagnosticOutput; 
+            }
+        } catch (error) { 
+            statusEl.style.color = 'var(--red)'; 
+            statusEl.textContent = `Transport Failure: ${error.message}`; 
+        }
+    }
+</script>
+
+</body>
+</html>
